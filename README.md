@@ -18,11 +18,11 @@ markdown files: any editor will do, and Obsidian is convenient for the canvas.
 
 ## Install
 
-Download `Install-MORF.command` from the release and double-click it. It asks for the vault
-folder, the name of the first project and the language for observations and
-fact articles, drops the plugin into
-`~/.claude/skills/` and lays the files out in the vault. No terminal, no
-permission prompts.
+Download `Install-MORF.command` from the release and double-click it. It asks where
+the `MORF` folder goes, what the first project is called and which language to
+keep observations and fact articles in — a list, opened on the one your system
+already uses. Then it drops the plugin into `~/.claude/skills/` and lays the
+files out. No terminal, no permission prompts.
 
 On first launch macOS warns about an unsigned file: right-click → Open → Open.
 

@@ -12,14 +12,15 @@ texts of the commands.
 
 ## The quick path
 
-Double-click `Install-MORF.command`. It asks three things — which folder the `Claude`
+Double-click `Install-MORF.command`. It asks three things — which folder the `MORF`
 folder goes into, what the first project is called, and which language to keep
-observations and fact articles in — then drops the plugin into
-`~/.claude/skills/morf` and lays the files out in the vault. No terminal, no
+observations and fact articles in, picked from a list that opens on the one your
+system already uses — then drops the plugin into
+`~/.claude/skills/morf` and lays the files out in `MORF`. No terminal, no
 permission prompts.
 
 It resolves earlier installs on its own: a marketplace copy, a half-installed
-folder, a pointer to another vault. Memory records are never touched — only
+folder, a pointer to another MORF. Memory records are never touched — only
 what is missing gets created.
 
 On first launch macOS warns about an unsigned file: right-click → Open → Open.
@@ -34,21 +35,21 @@ Through the marketplace, if you prefer:
 ## What ends up where
 
 ```
-<vault>/
-├── MORF/
-│   ├── Memory/
-│   │   ├── Scripts/        five scripts and config.json
-│   │   ├── Transcripts/    the conversation archive
-│   │   ├── <project>/      L0 … L3, dropped
-│   │   ├── sessions.md · audit.md · levels.md
-│   │   ├── TAGS.md · INDEX.md
-│   │   └── model.canvas
-│   ├── Facts/              fact articles
-│   └── Docs/               these notes
+MORF/
+├── Memory/
+│   ├── Scripts/        five scripts and config.json
+│   ├── Transcripts/    the conversation archive
+│   ├── <project>/      L0 … L3, dropped
+│   ├── sessions.md · audit.md · levels.md
+│   ├── TAGS.md · INDEX.md
+│   └── model.canvas
+├── Facts/              fact articles
+└── Docs/               these notes
 ```
 
-`~/.claude/memory-vault` holds the path to the vault; every script reads it, so
-nothing else needs configuring.
+`~/.claude/morf-path` holds the path to the folder; every script reads it, so
+nothing else needs configuring. Nothing above that folder is ours, and no
+script looks there.
 
 ## The commands
 
@@ -135,17 +136,17 @@ Audit the memory of the current project. Change nothing: report only.
 Say plainly if there is nothing to report. A quiet audit is a good result.
 ```
 
-## The vault `CLAUDE.md`
+## The `CLAUDE.md` next to MORF
 
 The installer creates this file if it is missing and keeps the `Language`
 section between markers, so a repeat install replaces only that section. The
 rest is yours; the working order itself lives in the plugin's `morf` skill.
 
 ```markdown
-# Vault
+# Notes
 
 Memory lives in `MORF/Memory`, fact articles in `MORF/Facts`.
-The working order is in the `morf` skill of the morf plugin.
+The working order is in the `morf` skill.
 
 ## Never
 

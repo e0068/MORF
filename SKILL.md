@@ -1,6 +1,6 @@
 ---
 name: morf
-description: MORF — Memory of Observations, Rules and Facts. Working order for the three-phase memory: what to read at session start, how to consolidate the levels, and how an observation turns into a rule or a fact article. Use whenever a session begins in a vault that has MORF/Memory, when the user asks about memory, observations, facts or rules, or when a session-start hook reports an unfinished stretch.
+description: MORF — Memory of Observations, Rules and Facts. Working order for the three-phase memory: what to read at session start, how to consolidate the levels, and how an observation turns into a rule or a fact article. Use whenever a session begins where a MORF folder is set up, when the user asks about memory, observations, facts or rules, or when a session-start hook reports an unfinished stretch.
 ---
 
 # MORF
@@ -51,7 +51,9 @@ the reasoning is in `MORF/Docs/`.
 - An imperative produced by prefixing "do not" to an observation is a
   restatement, not a rule. A real rule adds what the observation lacks:
   what to do instead, under which condition.
-- Fact articles are articles about a phenomenon, not one fact per file.
+- Fact articles live in `MORF/Facts` and nowhere else: the map is built from
+  that folder alone, so an article written elsewhere is invisible.
+  They are articles about a phenomenon, not one fact per file.
   Before writing, look for an existing article via `TAGS.md` and `INDEX.md`
   and append a section with its sources. Link related phenomena with `[[...]]`.
   When the phenomenon is already covered, add your source to that paragraph

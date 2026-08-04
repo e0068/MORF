@@ -87,7 +87,7 @@ For rules it is the exact opposite: there the contour is a file, the moment of l
 
 **Why this way.** Facts are the only layer that never reaches the agent on its own: observations are read at start, rules are loaded by the mechanism, facts have to be found. Both indexes exist for this layer.
 
-The first hop is needed because the map grows with the vault and at a few hundred articles becomes expensive reading in its own right. The tag dictionary barely grows: tags run out sooner than articles.
+The first hop is needed because the map grows with the collection and at a few hundred articles becomes expensive reading in its own right. The tag dictionary barely grows: tags run out sooner than articles.
 
 **A tag is an axis of search, not a topic.** What the article is about is stated by its title; a tag exists to narrow the map. Hence the working criterion: **a tag earns its place when at least two articles carry it.** A tag on a single article narrows nothing and merely repeats the title — `build-index.py` lists such tags on every build.
 

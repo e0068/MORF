@@ -16,7 +16,7 @@ import sys
 
 # ===== Settings =====
 
-# The folder name is spelled out rather than taken from vault.py on purpose:
+# The folder name is spelled out rather than taken from morf.py on purpose:
 # this hook runs on every tool call, and a guard that fails open because a
 # sibling import broke is worse than a name written twice.
 GUARDED = "MORF/Memory/Transcripts"

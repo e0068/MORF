@@ -10,7 +10,7 @@ tags: [morf]
 
 At the end of a piece of work the agent records what happened and was unexpected. Those observations accumulate, get scored and are consolidated level by level. What matures into "do it this way" becomes a rule; what stays true but yields no action settles as an article about the phenomenon; what stops being confirmed and used is displaced with its sources intact.
 
-One vault, two windows. In Claude you hand out tasks and ask questions; in a notes editor you look at the same thing yourself. There are no copies — the files are the same.
+One folder, two windows. In Claude you hand out tasks and ask questions; in a notes editor you look at the same thing yourself. There are no copies — the files are the same.
 
 ## Three categories
 
