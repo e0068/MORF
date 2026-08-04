@@ -33,7 +33,6 @@ SESSIONS = MEMORY / "sessions.md"
 CURRENT = MEMORY / ".current.json"
 PENDING = MEMORY / ".pending"
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
-SIBLING_WINDOW_SEC = 60 * 60 * 12   # slack to catch subagent files
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 
 
@@ -61,12 +60,13 @@ def project_name(cwd: str) -> str:
 # ===== Actions =====
 
 def copy_transcripts(source: str, slug: str) -> int:
-    """Copies the session transcript and everything written beside it.
+    """Copies the session transcript and the subagent files belonging to it.
 
-    Subagents write their files into the same project directory; which ones
-    exactly is unknown in advance, so take every file modified no earlier
-    than the start of the main transcript. Copied whole, with all structure:
-    turns, reasoning, tool calls.
+    Claude Code keeps a session's subagent transcripts in a folder named
+    after the session, next to the transcript itself. The `.jsonl` files
+    lying beside it are other sessions' transcripts, not this one's
+    children: picking siblings by modification time gathered peers, stored
+    every session twice, and never copied a subagent at all.
     """
     if not source:
         return 0
@@ -76,13 +76,17 @@ def copy_transcripts(source: str, slug: str) -> int:
 
     target = TRANSCRIPTS / slug
     target.mkdir(parents=True, exist_ok=True)
-    started = origin.stat().st_mtime - SIBLING_WINDOW_SEC
+    shutil.copy2(origin, target / origin.name)
+    copied = 1
 
-    copied = 0
-    for path in sorted(origin.parent.glob("*.jsonl")):
-        if path == origin or path.stat().st_mtime >= started:
-            shutil.copy2(path, target / path.name)
-            copied += 1
+    nested = origin.with_suffix("")
+    for path in sorted(nested.rglob("*")) if nested.is_dir() else []:
+        if not path.is_file():
+            continue
+        destination = target / path.relative_to(nested)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
+        copied += 1
     return copied
 
 
