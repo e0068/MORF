@@ -1,0 +1,20 @@
+{
+  "weight_miss": 1,
+  "weight_flip": 2,
+  "min_events": 3,
+  "unit": "sessions",
+  "levels": [
+    "L0",
+    "L1",
+    "L2",
+    "L3"
+  ],
+  "horizon_base": 1,
+  "horizon_step": 5,
+  "limits": [
+    40,
+    30,
+    25,
+    20
+  ]
+}

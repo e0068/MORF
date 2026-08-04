@@ -1,0 +1,703 @@
+{
+ "nodes": [
+  {
+   "id": "t_session",
+   "type": "text",
+   "text": "**When** · a session starts",
+   "x": 0,
+   "y": 0,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "hook_start",
+   "type": "text",
+   "text": "**Hook** `SessionStart`\n\n`.claude/settings.json` → `archive-session.py`",
+   "x": 0,
+   "y": 160,
+   "width": 460,
+   "height": 112,
+   "color": "5"
+  },
+  {
+   "id": "src",
+   "type": "text",
+   "text": "**Claude Code history**\n\n`~/.claude/projects/<repo>/*.jsonl`\n\nWritten as the session goes, not at its end. Lives for `cleanupPeriodDays`; a month is enough.",
+   "x": 0,
+   "y": 382,
+   "width": 460,
+   "height": 184
+  },
+  {
+   "id": "g_archive",
+   "type": "group",
+   "label": "ARCHIVE",
+   "x": -40,
+   "y": 742,
+   "width": 540,
+   "height": 582,
+   "color": "3"
+  },
+  {
+   "id": "archive",
+   "type": "text",
+   "text": "**`Claude/Memory/Transcripts/<id>/`**\n\nA folder per session holding all its files, subagent transcripts included.\n\nRaw, never retold. Permanent: never deleted. `.jsonl` is not indexed by note editors.",
+   "x": 0,
+   "y": 782,
+   "width": 460,
+   "height": 208
+  },
+  {
+   "id": "sessions",
+   "type": "text",
+   "text": "**`sessions.md`** — the index\n\n`s:260803-a41f` → date, project, what it was about.\n\nThe order of a project's rows sets the age of events: measured in sessions, not days.",
+   "x": 0,
+   "y": 1100,
+   "width": 460,
+   "height": 184,
+   "color": "3"
+  },
+  {
+   "id": "t_handoff",
+   "type": "text",
+   "text": "**When** · the agent finished a piece of work",
+   "x": 620,
+   "y": 340,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "handoff",
+   "type": "text",
+   "text": "**Command** `/morf:handoff`\n\n`archive-session.py --handoff` copies the transcript and returns a reference to the stretch: `s:…#412-980`.",
+   "x": 620,
+   "y": 500,
+   "width": 460,
+   "height": 136,
+   "color": "4"
+  },
+  {
+   "id": "counters",
+   "type": "text",
+   "text": "## Reconcile with the prediction\n\n`hit` held · `use` changed a decision · `miss` did not hold · `inverse` the opposite happened\n\n`inverse` also starts a new line.",
+   "x": 620,
+   "y": 760,
+   "width": 460,
+   "height": 184,
+   "color": "4"
+  },
+  {
+   "id": "g_obs",
+   "type": "group",
+   "label": "OBSERVATIONS",
+   "x": -40,
+   "y": 1400,
+   "width": 540,
+   "height": 1236,
+   "color": "4"
+  },
+  {
+   "id": "l0",
+   "type": "text",
+   "text": "**`L0.md`** · intake\n\n`hit:1 use:0 what happened (s:…#412-980)`\n\nNever loaded into context.",
+   "x": 0,
+   "y": 1440,
+   "width": 460,
+   "height": 160
+  },
+  {
+   "id": "l1",
+   "type": "text",
+   "text": "**`L1.md`**\n\nHeld a second time, or changed a decision that had been made.",
+   "x": 0,
+   "y": 1710,
+   "width": 460,
+   "height": 136
+  },
+  {
+   "id": "l2",
+   "type": "text",
+   "text": "**`L2.md`**\n\nChanges behaviour in tasks that do not exist yet.",
+   "x": 0,
+   "y": 1960,
+   "width": 460,
+   "height": 112
+  },
+  {
+   "id": "l3",
+   "type": "text",
+   "text": "**`L3.md`**\n\nLived out its horizon without refutation.",
+   "x": 0,
+   "y": 2210,
+   "width": 460,
+   "height": 112
+  },
+  {
+   "id": "dropped",
+   "type": "text",
+   "text": "**`dropped.md`**\n\nMoves here whole: counters, sources, move history. No limit.\n\nNo automatic return: there is nothing to observe a displaced line by — it is loaded nowhere.",
+   "x": 0,
+   "y": 2460,
+   "width": 460,
+   "height": 208
+  },
+  {
+   "id": "t_rollup",
+   "type": "text",
+   "text": "**When** · session start and enough has accumulated",
+   "x": -620,
+   "y": 1400,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "cfg",
+   "type": "text",
+   "text": "**`Scripts/config.json`**\n\nWeights, scale unit, level step, limits. The levels are published to `levels.md`.",
+   "x": -620,
+   "y": 1560,
+   "width": 460,
+   "height": 136
+  },
+  {
+   "id": "scores",
+   "type": "text",
+   "text": "**`score-memory.py`**\n\n```\ns = e₁·N/e_N            overdue\nC = 1 − 2^−(hit−miss−2·inverse)\nS = C + ln(1+use)       maturity\nR = use × (1−C)         verify\n```\n\nAge in sessions, so rarity is not punished.",
+   "x": -620,
+   "y": 1800,
+   "width": 460,
+   "height": 280,
+   "color": "1"
+  },
+  {
+   "id": "vyvod",
+   "type": "text",
+   "text": "## Reach a verdict\n\nGather close lines into a cluster and try to state an imperative.\n\n🟩 end of session — states it while the details are fresh\n🟦 start of the next one — decides by weight\n\nA rule is created only after the candidate was run against what already happened.",
+   "x": 0,
+   "y": 2756,
+   "width": 460,
+   "height": 304,
+   "color": "2"
+  },
+  {
+   "id": "t_why",
+   "type": "text",
+   "text": "**When** · you need to check where a line came from",
+   "x": -620,
+   "y": 700,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "why",
+   "type": "text",
+   "text": "## `/morf:why`\n\nYou run it. Takes the reference `s:260803-a41f#412-980`, finds the session in the index and opens the right stretch of conversation.\n\nNo file means the session was cut short before its stretch was copied.",
+   "x": -620,
+   "y": 860,
+   "width": 460,
+   "height": 232,
+   "color": "1"
+  },
+  {
+   "id": "t_audit",
+   "type": "text",
+   "text": "**When** · every tenth session of the project",
+   "x": -620,
+   "y": 2420,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "audit",
+   "type": "text",
+   "text": "## `/morf:audit`\n\nEvery tenth session of the project. Compares what was displaced against what has been written again.\n\nSame words — the threshold is too low. Different words — the wording is unstable. Empty — a good result.",
+   "x": -620,
+   "y": 2544,
+   "width": 460,
+   "height": 208,
+   "color": "3"
+  },
+  {
+   "id": "legend",
+   "type": "text",
+   "text": "# MORF\n\n→ [[readme]] · [[observations]] · [[facts]] · [[rules]] · [[foundation]]\n\n**How to read it.** A purple node is a trigger: every chain starts with one. A heading with a verb is an action, one with a path or a noun is an entity. The label on an arrow is what happens along it.\n\nArrow colour is the executor:\n🟩 agent in a task · 🟦 agent at session start · 🟥 you · ⬜ scripts and hooks",
+   "x": -1240,
+   "y": 0,
+   "width": 460,
+   "height": 352,
+   "color": "3"
+  },
+  {
+   "id": "d_readme",
+   "type": "file",
+   "file": "Claude/Docs/readme.md",
+   "x": -1240,
+   "y": 560,
+   "width": 460,
+   "height": 480
+  },
+  {
+   "id": "g_know",
+   "type": "group",
+   "label": "FACTS",
+   "x": 580,
+   "y": 2716,
+   "width": 1100,
+   "height": 900,
+   "color": "3"
+  },
+  {
+   "id": "know_add",
+   "type": "text",
+   "text": "## Append to the article about the phenomenon\n\nFirst find the existing article through `TAGS.md` → `INDEX.md`. None yet — start one.\n\nAn observation becomes a paragraph with its own sources, not a separate file.",
+   "x": 620,
+   "y": 2756,
+   "width": 460,
+   "height": 208,
+   "color": "4"
+  },
+  {
+   "id": "know",
+   "type": "text",
+   "text": "**Article about a phenomenon** · `Claude/Facts`\n\nA subject per file, not a fact per file: it gathers observations as they arrive.\n\n```yaml\ndescription, tags\nscope: [project]\napplied: 3\n```\n\nSections by facet, each with its own `s:` sources, and `[[…]]` links to related phenomena.\n\nA repeat adds an `s:` to an existing paragraph; a new section is for a new facet.",
+   "x": 1180,
+   "y": 2756,
+   "width": 460,
+   "height": 424,
+   "color": "3"
+  },
+  {
+   "id": "t_need",
+   "type": "text",
+   "text": "**When** · you need a fact about a subject",
+   "x": 620,
+   "y": 3096,
+   "width": 460,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "know_find",
+   "type": "text",
+   "text": "## Find a fact\n\n`TAGS.md` → the right part of `INDEX.md` → 2–5 articles, built by `build-index.py`.\n\nThe agent comes here on its own, when searching.\n\nA tag earns its place when at least two articles carry it.",
+   "x": 620,
+   "y": 3196,
+   "width": 460,
+   "height": 256,
+   "color": "#1a1a1a"
+  },
+  {
+   "id": "g_rule",
+   "type": "group",
+   "label": "RULES",
+   "x": -40,
+   "y": 3736,
+   "width": 1700,
+   "height": 1180,
+   "color": "6"
+  },
+  {
+   "id": "rule_addr",
+   "type": "text",
+   "text": "## Choose the address\n\nBy reach and frequency of application. Movement goes both ways: wider on confirmation in a second project, narrower on refutation.",
+   "x": 0,
+   "y": 3776,
+   "width": 460,
+   "height": 160,
+   "color": "4"
+  },
+  {
+   "id": "g_addr",
+   "type": "group",
+   "label": "Addresses",
+   "x": 560,
+   "y": 3756,
+   "width": 520,
+   "height": 1080
+  },
+  {
+   "id": "a_user",
+   "type": "text",
+   "text": "**`~/.claude/CLAUDE.md`**\n\nLoads in every session of every project.",
+   "x": 600,
+   "y": 3776,
+   "width": 440,
+   "height": 112
+  },
+  {
+   "id": "a_proj",
+   "type": "text",
+   "text": "**`CLAUDE.md` of the project**\n\nLoads in every session of this project.",
+   "x": 600,
+   "y": 3918,
+   "width": 440,
+   "height": 112
+  },
+  {
+   "id": "a_rules",
+   "type": "text",
+   "text": "**`.claude/rules/` with `paths:`**\n\nLoads when the agent opens files matching the pattern.",
+   "x": 600,
+   "y": 4060,
+   "width": 440,
+   "height": 136
+  },
+  {
+   "id": "a_skill",
+   "type": "text",
+   "text": "**`SKILL.md`**\n\nLoads by the meaning of the task: a set of rarely needed rules.",
+   "x": 600,
+   "y": 4202,
+   "width": 440,
+   "height": 136
+  },
+  {
+   "id": "a_agent",
+   "type": "text",
+   "text": "**An agent definition**\n\nLoads when that role is invoked: the narrowest reach.",
+   "x": 600,
+   "y": 4368,
+   "width": 440,
+   "height": 136
+  },
+  {
+   "id": "rule_track",
+   "type": "text",
+   "text": "**Rule track record**\n\n`<!-- A14 V3 X̄6 for:(s:…) against:(s:…) -->`\n\nThe losing observations keep gathering confirmations. Once *against* outweighs *for*, the rule goes to review.\n\n`E = (V/A) × X̄`",
+   "x": 1160,
+   "y": 3776,
+   "width": 480,
+   "height": 232,
+   "color": "3"
+  },
+  {
+   "id": "t_violation",
+   "type": "text",
+   "text": "**When** · a rule was broken",
+   "x": 1160,
+   "y": 4076,
+   "width": 480,
+   "height": 64,
+   "color": "6"
+  },
+  {
+   "id": "rule_hook",
+   "type": "text",
+   "text": "## Move into enforcement\n\n`PreToolUse` · `permissions.deny` · CI\n\nPromoted by a high `E`. You make the move: a hook closes off the view beyond itself.",
+   "x": 1160,
+   "y": 4196,
+   "width": 480,
+   "height": 184,
+   "color": "1"
+  },
+  {
+   "id": "guard",
+   "type": "text",
+   "color": "1",
+   "text": "**Hook** `PreToolUse` · `guard-archive.py`\n\nWriting and deleting inside the archive are blocked: it is filled only by copying from Claude Code history.\n\nDoes not affect you — you edit outside the agent's tools.",
+   "x": -660,
+   "y": 1002,
+   "width": 460,
+   "height": 208
+  }
+ ],
+ "edges": [
+  {
+   "id": "e0",
+   "fromNode": "t_session",
+   "fromSide": "bottom",
+   "toNode": "hook_start",
+   "toSide": "top"
+  },
+  {
+   "id": "e1",
+   "fromNode": "hook_start",
+   "fromSide": "bottom",
+   "toNode": "src",
+   "toSide": "top",
+   "label": "read the previous state",
+   "color": "5"
+  },
+  {
+   "id": "e2",
+   "fromNode": "src",
+   "fromSide": "bottom",
+   "toNode": "archive",
+   "toSide": "top",
+   "label": "sweep in what is missing",
+   "color": "5"
+  },
+  {
+   "id": "e3",
+   "fromNode": "archive",
+   "fromSide": "bottom",
+   "toNode": "sessions",
+   "toSide": "top",
+   "label": "add a row",
+   "color": "5"
+  },
+  {
+   "id": "e4",
+   "fromNode": "t_handoff",
+   "fromSide": "bottom",
+   "toNode": "handoff",
+   "toSide": "top"
+  },
+  {
+   "id": "e5",
+   "fromNode": "handoff",
+   "fromSide": "left",
+   "toNode": "archive",
+   "toSide": "right",
+   "label": "put a copy",
+   "color": "4"
+  },
+  {
+   "id": "e6",
+   "fromNode": "handoff",
+   "fromSide": "bottom",
+   "toNode": "counters",
+   "toSide": "top",
+   "label": "return a reference",
+   "color": "4"
+  },
+  {
+   "id": "e7",
+   "fromNode": "counters",
+   "fromSide": "bottom",
+   "toNode": "l0",
+   "toSide": "right",
+   "label": "bump the counters",
+   "color": "4"
+  },
+  {
+   "id": "e8",
+   "fromNode": "handoff",
+   "fromSide": "left",
+   "toNode": "l0",
+   "toSide": "right",
+   "label": "compress into observations with references",
+   "color": "4"
+  },
+  {
+   "id": "e9",
+   "fromNode": "t_rollup",
+   "fromSide": "bottom",
+   "toNode": "cfg",
+   "toSide": "top"
+  },
+  {
+   "id": "e10",
+   "fromNode": "cfg",
+   "fromSide": "bottom",
+   "toNode": "scores",
+   "toSide": "top",
+   "label": "read weights and levels"
+  },
+  {
+   "id": "e11",
+   "fromNode": "scores",
+   "fromSide": "right",
+   "toNode": "l0",
+   "toSide": "left",
+   "label": "write S · R · t",
+   "color": "5"
+  },
+  {
+   "id": "e12",
+   "fromNode": "l0",
+   "fromSide": "bottom",
+   "toNode": "l1",
+   "toSide": "top",
+   "label": "step 3 · displace the weakest",
+   "color": "5"
+  },
+  {
+   "id": "e13",
+   "fromNode": "l1",
+   "fromSide": "bottom",
+   "toNode": "l2",
+   "toSide": "top",
+   "label": "step 2",
+   "color": "5"
+  },
+  {
+   "id": "e14",
+   "fromNode": "l2",
+   "fromSide": "bottom",
+   "toNode": "l3",
+   "toSide": "top",
+   "label": "step 1 · consolidate top down",
+   "color": "5"
+  },
+  {
+   "id": "e15",
+   "fromNode": "l3",
+   "fromSide": "left",
+   "toNode": "vyvod",
+   "toSide": "left",
+   "label": "lines from any level",
+   "color": "5"
+  },
+  {
+   "id": "e16",
+   "fromNode": "vyvod",
+   "fromSide": "top",
+   "toNode": "dropped",
+   "toSide": "bottom",
+   "label": "weight decayed",
+   "color": "5"
+  },
+  {
+   "id": "e25",
+   "fromNode": "t_why",
+   "fromSide": "bottom",
+   "toNode": "why",
+   "toSide": "top"
+  },
+  {
+   "id": "e26",
+   "fromNode": "why",
+   "fromSide": "right",
+   "toNode": "sessions",
+   "toSide": "left",
+   "label": "raise the stretch",
+   "color": "1"
+  },
+  {
+   "id": "e27",
+   "fromNode": "t_audit",
+   "fromSide": "bottom",
+   "toNode": "audit",
+   "toSide": "top"
+  },
+  {
+   "id": "e28",
+   "fromNode": "dropped",
+   "fromSide": "left",
+   "toNode": "audit",
+   "toSide": "right",
+   "label": "compare",
+   "color": "5"
+  },
+  {
+   "id": "e_unfinished",
+   "fromNode": "src",
+   "fromSide": "right",
+   "toNode": "handoff",
+   "toSide": "left",
+   "color": "5",
+   "label": "report the unprocessed stretch"
+  },
+  {
+   "id": "n27",
+   "fromNode": "know_add",
+   "fromSide": "right",
+   "toNode": "know",
+   "toSide": "left",
+   "label": "append a section with links",
+   "color": "4"
+  },
+  {
+   "id": "n28",
+   "fromNode": "t_need",
+   "fromSide": "bottom",
+   "toNode": "know_find",
+   "toSide": "top"
+  },
+  {
+   "id": "n29",
+   "fromNode": "know_find",
+   "fromSide": "right",
+   "toNode": "know",
+   "toSide": "left",
+   "label": "open the article",
+   "color": "5"
+  },
+  {
+   "id": "n30",
+   "fromNode": "vyvod",
+   "fromSide": "right",
+   "toNode": "know_add",
+   "toSide": "left",
+   "label": "no imperative follows",
+   "color": "5"
+  },
+  {
+   "id": "n31",
+   "fromNode": "know",
+   "fromSide": "top",
+   "toNode": "l0",
+   "toSide": "right",
+   "label": "applied grew",
+   "color": "4"
+  },
+  {
+   "id": "n27",
+   "fromNode": "rule_addr",
+   "fromSide": "right",
+   "toNode": "a_user",
+   "toSide": "left",
+   "label": "place by reach",
+   "color": "6"
+  },
+  {
+   "id": "n28",
+   "fromNode": "a_user",
+   "fromSide": "right",
+   "toNode": "rule_track",
+   "toSide": "left",
+   "label": "keep the record",
+   "color": "6"
+  },
+  {
+   "id": "n29",
+   "fromNode": "t_violation",
+   "fromSide": "top",
+   "toNode": "rule_track",
+   "toSide": "bottom",
+   "color": "1"
+  },
+  {
+   "id": "n30",
+   "fromNode": "rule_track",
+   "fromSide": "bottom",
+   "toNode": "rule_hook",
+   "toSide": "top",
+   "label": "high E",
+   "color": "1"
+  },
+  {
+   "id": "n31",
+   "fromNode": "rule_track",
+   "fromSide": "left",
+   "toNode": "l0",
+   "toSide": "right",
+   "label": "refuted → inverse",
+   "color": "4"
+  },
+  {
+   "id": "n32",
+   "fromNode": "vyvod",
+   "fromSide": "bottom",
+   "toNode": "rule_addr",
+   "toSide": "top",
+   "label": "matured and tried",
+   "color": "6"
+  },
+  {
+   "id": "guard_e",
+   "fromNode": "guard",
+   "fromSide": "right",
+   "toNode": "archive",
+   "toSide": "left",
+   "label": "block",
+   "color": "1"
+  }
+ ]
+}

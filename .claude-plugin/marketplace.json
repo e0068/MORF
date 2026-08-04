@@ -1,0 +1,14 @@
+{
+  "name": "morf",
+  "owner": {
+    "name": "e0068",
+    "url": "https://github.com/e0068"
+  },
+  "plugins": [
+    {
+      "name": "morf",
+      "source": "./",
+      "description": "MORF — Memory of Observations, Rules and Facts: three-phase memory for Claude"
+    }
+  ]
+}
