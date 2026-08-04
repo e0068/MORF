@@ -6,6 +6,8 @@ tags: [morf]
 
 # MORF
 
+**EN** — [RU](ru/readme.md)
+
 **M**emory **o**f **O**bservations, **R**ules and **F**acts — three-phase memory for Claude.
 
 At the end of a piece of work the agent records what happened and was unexpected. Those observations accumulate, get scored and are consolidated level by level. What matures into "do it this way" becomes a rule; what stays true but yields no action settles as an article about the phenomenon; what stops being confirmed and used is displaced with its sources intact.

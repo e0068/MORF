@@ -6,6 +6,8 @@ tags: [morf, observations]
 
 # Observations
 
+**EN** — [RU](ru/наблюдения.md)
+
 **What this is.** Records of something that happened and was unexpected. Indicative mood, always inside a project, always with sources.
 
 **What for.** This is a queue of candidate rules. An agent records an observation when it runs into something the system did not contain; the counters answer not "is this worth keeping" but "has it matured enough to change behaviour".

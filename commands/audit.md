@@ -12,7 +12,7 @@ Audit the memory of the current project. Change nothing: report only.
    observation is being recorded twice under two names.
 
 3. Count and report, without interpreting: lines added, promoted, displaced;
-   lines that became rules and lines that became knowledge; lines sitting at
+   lines that became rules and lines that became facts; lines sitting at
    the top level for over three periods without an exit; whether `dropped.md`
    grows faster than the levels.
 

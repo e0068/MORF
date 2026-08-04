@@ -28,14 +28,15 @@ TAG_FILES_SHOWN = 12
 
 # ===== Path check =====
 
-def repeated_names(relative: Path) -> str:
+def repeated_names(relative: Path, root: str) -> str:
     """A folder name states its relation to the parent, not a standalone label.
 
     `Facts/Cache/Cache` would read as "cache of cache", which is not a thing,
     so the level is spurious. The check: read the path bottom-up as a phrase;
-    a repeated name means the phrase does not hold together.
+    a repeated name means the phrase does not hold together. The walked folder
+    is part of the phrase, so `Facts/Facts` is caught too.
     """
-    parts = [p.casefold() for p in relative.parts[:-1]]
+    parts = [p.casefold() for p in (root, *relative.parts[:-1])]
     seen, repeats = set(), []
     for part in parts:
         if part in seen:
@@ -77,11 +78,25 @@ def walk(facts: Path) -> tuple[list[tuple[str, dict[str, str]]], list[str]]:
     for path in sorted(facts.rglob("*.md")):
         relative = path.relative_to(facts)
         rel = relative.as_posix()
-        repeats = repeated_names(relative)
+        repeats = repeated_names(relative, facts.name)
         if repeats:
             suspect.append(f"{rel} — repeats: {repeats}")
         notes.append((rel, parse_frontmatter(path)))
     return notes, suspect
+
+
+def clashes(notes: list) -> list[str]:
+    """Articles that link as the same name: one of them becomes unreachable.
+
+    A link is written by name, not by path — a path would resolve against the
+    editor's own root, which is above us and not ours to assume. The price is
+    that two files named alike in different subfolders are one link.
+    """
+    by_name: dict[str, list[str]] = {}
+    for rel, _ in notes:
+        by_name.setdefault(Path(rel).stem, []).append(rel)
+    return [f"[[{name}]] is two articles: {', '.join(files)}"
+            for name, files in sorted(by_name.items()) if len(files) > 1]
 
 
 # ===== Rendering =====
@@ -150,6 +165,8 @@ def main() -> None:
         print(f"  tags on a single article, they narrow nothing: {', '.join(lonely)}")
     for line in suspect:
         print(f"  path does not read as a phrase: {line}")
+    for line in clashes(notes):
+        print(f"  name taken twice, rename one: {line}")
 
 
 if __name__ == "__main__":

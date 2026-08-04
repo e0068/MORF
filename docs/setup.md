@@ -6,6 +6,8 @@ tags: [morf, setup]
 
 # Setup
 
+**EN** — [RU](ru/установка.md)
+
 The model lives on the canvas at `MORF/Memory/model.canvas`; the reasoning is
 in these notes. This file holds only what is in neither: how to install and the
 texts of the commands.
@@ -77,11 +79,12 @@ Reconcile what happened with what the system predicted.
 
 3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
-   Write it in the indicative. An observation is what occurred.
+   Write it in the indicative, in the language set in CLAUDE.md.
+   An observation is what occurred.
 
 4. If a conclusion about how to act formed during the work, do not discard it.
    Record the observation in the indicative, mark it `↑`, and attach the
-   proposed rule wording below it.
+   proposed rule wording below it, in English.
 
 5. Invent nothing. If it did not happen in this session, it is not written.
 
@@ -95,8 +98,8 @@ Take me back to the conversation a line came from.
 
 The argument is a fragment of an observation, an article or a rule.
 
-1. Find it across `MORF/Memory/`, including `dropped.md`, in fact articles
-   and in rule files. Say where it lives.
+1. Find it across `MORF/Memory/`, including `dropped.md`, in fact
+   articles and in rule files. Say where it lives.
 2. For each source, run:
    `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/read-session.py <ref> <keyword>`
    A reference may carry a line range: `260803-a41f#412-980`.
@@ -126,8 +129,8 @@ Audit the memory of the current project. Change nothing: report only.
    observation is being recorded twice under two names.
 
 3. Count and report, without interpreting: lines added, promoted, displaced;
-   lines that became rules and lines that became facts; lines sitting at the
-   top level for over three periods without an exit; whether `dropped.md`
+   lines that became rules and lines that became facts; lines sitting at
+   the top level for over three periods without an exit; whether `dropped.md`
    grows faster than the levels.
 
 4. Append the result to `MORF/Memory/audit.md` with the current session id

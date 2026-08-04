@@ -1,6 +1,6 @@
 # MORF
 
-[English](README.md) · **Русский**
+[EN](README.md) — **RU**
 
 **M**emory **o**f **O**bservations, **R**ules and **F**acts — трёхфазная
 память для Claude.

@@ -16,10 +16,11 @@ import sys
 
 # ===== Settings =====
 
-# The folder name is spelled out rather than taken from morf.py on purpose:
-# this hook runs on every tool call, and a guard that fails open because a
-# sibling import broke is worse than a name written twice.
-GUARDED = "MORF/Memory/Transcripts"
+# The tail of the path, not the whole of it: the folder above is wherever its
+# owner put it and may be called anything, while these two segments are ours.
+# Spelled out rather than imported, because this hook runs on every tool call
+# and a guard that fails open on a broken sibling import guards nothing.
+GUARDED = "Memory/Transcripts"
 WRITERS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 SHELL = ("Bash", "BashOutput")
 DESTRUCTIVE = ("rm ", "rm\t", "mv ", "truncate", "> ", "shred", "unlink")

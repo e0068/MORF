@@ -34,7 +34,7 @@ the reasoning is in `MORF/Docs/`.
 
      stated, enough weight, already tried against what happened -> rule
      stated, weight too low                                     -> leave it
-     cannot be stated                                           -> knowledge
+     cannot be stated                                           -> a fact article
      weight decayed                                             -> `dropped.md`
 
    - promote a line one level up, displacing the weakest by `S`
@@ -78,5 +78,5 @@ the reasoning is in `MORF/Docs/`.
 ## Language
 
 Imperatives in English: these instructions, commands, rules, agent definitions.
-Everything in the indicative — observations, fact articles, and your
-replies to me — in Russian.
+Everything in the indicative — observations, fact articles, and your replies
+to me — in the language set in the `CLAUDE.md` next to MORF.

@@ -6,6 +6,8 @@ tags: [morf, infrastructure]
 
 # Foundation
 
+**EN** — [RU](ru/основание.md)
+
 **What this is.** The machinery under the three layers: the conversation archive, the time scale, traceability, settings, the audit.
 
 **What for.** None of the layers works on its own. An observation without a source is invalid, a source without an archive is a dead link, a score without a time scale cannot be computed. This is a shared foundation, not a fourth category of information.

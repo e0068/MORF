@@ -6,6 +6,8 @@ tags: [morf, facts]
 
 # Facts
 
+**EN** — [RU](ru/факты.md)
+
 **What this is.** Articles about phenomena: true, repeatable, and yielding no action. Not one fact per file but one subject per file — "Shader cache", not "a cold cache makes the build take 40 seconds". Observations become its paragraphs.
 
 **What for.** The third exit from memory. Without it an observation that is true and leads nowhere would decay together with the unconfirmed ones — the system would systematically discard what is true.
