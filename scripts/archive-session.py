@@ -31,6 +31,7 @@ MEMORY = morf.memory()
 TRANSCRIPTS = MEMORY / "Transcripts"
 SESSIONS = MEMORY / "sessions.md"
 CURRENT = MEMORY / ".current.json"
+PENDING = MEMORY / ".pending"
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 SIBLING_WINDOW_SEC = 60 * 60 * 12   # slack to catch subagent files
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
@@ -129,9 +130,11 @@ def unfinished(slug: str) -> str:
     start = state.get("mark", 0) + 1
     if start > lines:
         return ""   # everything processed, only an empty tail was cut
+    ref = f"s:{state['slug']}#{start}-{lines}"
+    PENDING.write_text(ref, encoding="utf-8")
     return (f"The previous session was cut short before /handoff. Its transcript "
-            f"has been swept in; the stretch s:{state['slug']}#{start}-{lines} is "
-            f"unprocessed — run /handoff for it before taking on anything new.")
+            f"has been swept in; the stretch {ref} is unprocessed — run /handoff "
+            f"for it before taking on anything new.")
 
 
 def handoff() -> str:
@@ -154,6 +157,7 @@ def handoff() -> str:
     lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
     start, state["mark"] = state["mark"] + 1, lines
     CURRENT.write_text(json.dumps(state), encoding="utf-8")
+    PENDING.unlink(missing_ok=True)
     return f"s:{state['slug']}#{start}-{lines}"
 
 
