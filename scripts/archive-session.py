@@ -22,14 +22,15 @@ import sys
 from datetime import date
 from pathlib import Path
 
-import vault
+import morf
 
 # ===== Settings =====
 
-VAULT = vault.root()
-TRANSCRIPTS = VAULT / "Claude" / "Memory" / "Transcripts"
-SESSIONS = VAULT / "Claude" / "Memory" / "sessions.md"
-CURRENT = VAULT / "Claude" / "Memory" / ".current.json"
+HOME = morf.home()
+MEMORY = morf.memory()
+TRANSCRIPTS = MEMORY / "Transcripts"
+SESSIONS = MEMORY / "sessions.md"
+CURRENT = MEMORY / ".current.json"
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 SIBLING_WINDOW_SEC = 60 * 60 * 12   # slack to catch subagent files
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
@@ -51,9 +52,9 @@ def session_slug(session_id: str, day: date) -> str:
 
 
 def project_name(cwd: str) -> str:
-    """Project name from the working folder; a dash for the vault itself."""
+    """Project name from the working folder; a dash for MORF itself."""
     path = Path(cwd) if cwd else Path.cwd()
-    return "—" if path == VAULT else path.name
+    return "—" if path == HOME else path.name
 
 
 # ===== Actions =====

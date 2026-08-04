@@ -6,6 +6,8 @@ tags: [morf, infrastructure]
 
 # Foundation
 
+**EN** — [RU](ru/основание.md)
+
 **What this is.** The machinery under the three layers: the conversation archive, the time scale, traceability, settings, the audit.
 
 **What for.** None of the layers works on its own. An observation without a source is invalid, a source without an archive is a dead link, a score without a time scale cannot be computed. This is a shared foundation, not a fourth category of information.
@@ -16,7 +18,7 @@ tags: [morf, infrastructure]
 
 **How it works.** One hook, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart).
 
-`SessionStart` adds a row to `Claude/Memory/sessions.md` and remembers the session state. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
+`SessionStart` adds a row to `MORF/Memory/sessions.md` and remembers the session state. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
 
 A copy into the archive is made on every `/morf:handoff`. **All** files written into the project directory during the session are copied: subagents keep their own, and which ones is not known in advance.
 
@@ -73,7 +75,7 @@ The date in the identifier is human-readable, the uuid distinguishes several ses
 **How it works.**
 
 ```bash
-python3 Claude/Memory/Scripts/read-session.py 260803-a41f#412-980 cache
+python3 MORF/Memory/Scripts/read-session.py 260803-a41f#412-980 cache
 ```
 
 `/morf:why` walks the chain: line → its `s:` → the index → the archive → a readable stretch of conversation. Agents' reasoning is shown.
@@ -106,7 +108,7 @@ The comment is stripped before the context, so the bookkeeping is free.
 
 ## Settings
 
-**How it works.** `Claude/Memory/Scripts/config.json` holds numbers for the script, next to the script. The canvas shows that same file as a link node, so no copy of the values exists anywhere.
+**How it works.** `MORF/Memory/Scripts/config.json` holds numbers for the script, next to the script. The canvas shows that same file as a link node, so no copy of the values exists anywhere.
 
 `levels.md` is generated from it: the levels with their horizons and limits, in a form the agent reads. Two files, but not two stores of one thing — a source and its derivative. Delete `levels.md` and it comes back; `config.json` cannot be restored from anywhere.
 

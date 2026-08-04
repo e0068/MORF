@@ -1,7 +1,7 @@
 {
   "name": "morf",
   "description": "MORF — Memory of Observations, Rules and Facts: three-phase memory for Claude",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "license": "MIT",
   "homepage": "https://github.com/e0068/MORF",
   "repository": "https://github.com/e0068/MORF",

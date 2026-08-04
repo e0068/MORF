@@ -2,11 +2,10 @@
 """Builds the service views of the knowledge layer: tag dictionary and map.
 
 TAGS.md   — tag, how many articles, where exactly. First hop of a search.
-INDEX.md  — path, description, scope, applied. Second hop.
+INDEX.md  — article, description, scope, applied. Second hop.
 
-The whole vault is indexed except Claude/Memory: fact articles live in
-Claude/Facts by default, but anything written by hand elsewhere also
-lands on the map as long as it carries front matter.
+Only Facts is walked. A fact article is one that lives there; a note kept
+anywhere else belongs to its owner, and the map does not reach for it.
 
 The fact layer is the only one that never reaches the agent on its own:
 observations are read at start, rules are loaded by the mechanism,
@@ -16,29 +15,28 @@ No dependencies beyond the standard library.
 
 from pathlib import Path
 
-import vault
+import morf
 
 # ===== Settings =====
 
-VAULT = vault.root()
-INDEX_FILE = VAULT / "Claude" / "Memory" / "INDEX.md"
-TAGS_FILE = VAULT / "Claude" / "Memory" / "TAGS.md"
-SKIP_DIRS = {".obsidian", ".git", ".trash"}
-SKIP_PREFIX = ("Claude/Memory", "Claude/Docs")   # machinery, observations and docs; facts sit beside, in Claude/Facts
+FACTS = morf.facts()
+INDEX_FILE = morf.memory() / "INDEX.md"
+TAGS_FILE = morf.memory() / "TAGS.md"
 FIELDS = ("type", "description", "tags", "scope", "applied")
 TAG_FILES_SHOWN = 12
 
 
 # ===== Path check =====
 
-def repeated_names(relative: Path) -> str:
+def repeated_names(relative: Path, root: str) -> str:
     """A folder name states its relation to the parent, not a standalone label.
 
-    `Claude/Memory/Memory` would read as "memory of memory", which is not a
-    thing, so the level is spurious. The check: read the path bottom-up as a
-    phrase; a repeated name means the phrase does not hold together.
+    `Facts/Cache/Cache` would read as "cache of cache", which is not a thing,
+    so the level is spurious. The check: read the path bottom-up as a phrase;
+    a repeated name means the phrase does not hold together. The walked folder
+    is part of the phrase, so `Facts/Facts` is caught too.
     """
-    parts = [p.casefold() for p in relative.parts[:-1]]
+    parts = [p.casefold() for p in (root, *relative.parts[:-1])]
     seen, repeats = set(), []
     for part in parts:
         if part in seen:
@@ -72,21 +70,33 @@ def listed(raw: str) -> list[str]:
     return [v.strip().strip("\"'") for v in raw.strip("[]").split(",") if v.strip()]
 
 
-# ===== Walking the vault =====
+# ===== Walking the articles =====
 
-def walk(vault: Path) -> tuple[list[tuple[str, dict[str, str]]], list[str]]:
+def walk(facts: Path) -> tuple[list[tuple[str, dict[str, str]]], list[str]]:
     """Relative path to fields for every article, plus paths that do not read."""
     notes, suspect = [], []
-    for path in sorted(vault.rglob("*.md")):
-        relative = path.relative_to(vault)
+    for path in sorted(facts.rglob("*.md")):
+        relative = path.relative_to(facts)
         rel = relative.as_posix()
-        if SKIP_DIRS & set(relative.parts) or rel.startswith(SKIP_PREFIX):
-            continue
-        repeats = repeated_names(relative)
+        repeats = repeated_names(relative, facts.name)
         if repeats:
-            suspect.append(f"{rel} — repeats: {repeats}")
+            suspect.append(f"{facts.name}/{rel} — repeats: {repeats}")
         notes.append((rel, parse_frontmatter(path)))
     return notes, suspect
+
+
+def clashes(notes: list) -> list[str]:
+    """Articles that link as the same name: one of them becomes unreachable.
+
+    A link is written by name, not by path — a path would resolve against the
+    editor's own root, which is above us and not ours to assume. The price is
+    that two files named alike in different subfolders are one link.
+    """
+    by_name: dict[str, list[str]] = {}
+    for rel, _ in notes:
+        by_name.setdefault(Path(rel).stem, []).append(rel)
+    return [f"[[{name}]] is written by: {', '.join(files)}"
+            for name, files in sorted(by_name.items()) if len(files) > 1]
 
 
 # ===== Rendering =====
@@ -114,7 +124,7 @@ def render_tags(notes: list) -> str:
         "|---|---|---|",
     ]
     for tag, files in sorted(index.items(), key=lambda kv: (-len(kv[1]), kv[0])):
-        shown = ", ".join(f"[[{f}]]" for f in sorted(files)[:TAG_FILES_SHOWN])
+        shown = ", ".join(f"[[{Path(f).stem}]]" for f in sorted(files)[:TAG_FILES_SHOWN])
         tail = " …" if len(files) > TAG_FILES_SHOWN else ""
         out.append(f"| {tag} | {len(files)} | {shown}{tail} |")
     return "\n".join(out) + "\n"
@@ -128,13 +138,13 @@ def render_index(notes: list) -> str:
         "Generated automatically; editing by hand is pointless.",
         f"Articles: {len(notes)}.",
         "",
-        "| File | Description | scope | applied |",
+        "| Article | Description | scope | applied |",
         "|---|---|---|---|",
     ]
     for rel, f in notes:
         scope = ", ".join(listed(f.get("scope", ""))) or "general"
         out.append(
-            f"| [[{rel}]] | {f.get('description', '—')} | {scope} | {f.get('applied', '0')} |"
+            f"| [[{Path(rel).stem}]] | {f.get('description', '—')} | {scope} | {f.get('applied', '0')} |"
         )
     return "\n".join(out) + "\n"
 
@@ -142,7 +152,7 @@ def render_index(notes: list) -> str:
 # ===== Entry point =====
 
 def main() -> None:
-    notes, suspect = walk(VAULT)
+    notes, suspect = walk(FACTS)
     INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
     INDEX_FILE.write_text(render_index(notes), encoding="utf-8")
     TAGS_FILE.write_text(render_tags(notes), encoding="utf-8")
@@ -155,6 +165,8 @@ def main() -> None:
         print(f"  tags on a single article, they narrow nothing: {', '.join(lonely)}")
     for line in suspect:
         print(f"  path does not read as a phrase: {line}")
+    for line in clashes(notes):
+        print(f"  name taken twice, rename one: {line}")
 
 
 if __name__ == "__main__":

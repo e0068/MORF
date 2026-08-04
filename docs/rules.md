@@ -6,6 +6,8 @@ tags: [morf, rules]
 
 # Rules
 
+**EN** — [RU](ru/правила.md)
+
 **What this is.** Instructions on how to act. Imperative mood, applied anywhere, never verified by observation — only obeyed or broken.
 
 **What for.** A rule is the only full exit from memory: the whole queue exists for it. A fact covers the case of "true, but no action follows", `dropped` covers "did not hold up".

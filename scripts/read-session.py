@@ -15,11 +15,11 @@ import json
 import sys
 from pathlib import Path
 
-import vault
+import morf
 
 # ===== Settings =====
 
-TRANSCRIPTS = vault.memory() / "Transcripts"
+TRANSCRIPTS = morf.memory() / "Transcripts"
 CONTEXT_LINES = 2
 MAX_CHARS = 600
 

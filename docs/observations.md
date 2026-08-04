@@ -6,6 +6,8 @@ tags: [morf, observations]
 
 # Observations
 
+**EN** — [RU](ru/наблюдения.md)
+
 **What this is.** Records of something that happened and was unexpected. Indicative mood, always inside a project, always with sources.
 
 **What for.** This is a queue of candidate rules. An agent records an observation when it runs into something the system did not contain; the counters answer not "is this worth keeping" but "has it matured enough to change behaviour".
@@ -48,7 +50,7 @@ Mood stopped being a filter because an observation is indicative by nature: turn
 **How it works.**
 
 ```
-Claude/Memory/<project>/
+MORF/Memory/<project>/
 ├── L0.md      intake, never loaded into context
 ├── L1.md      held a second time, or changed a decision
 ├── L2.md      changes behaviour in tasks that do not exist yet
