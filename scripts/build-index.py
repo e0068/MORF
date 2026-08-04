@@ -80,7 +80,7 @@ def walk(facts: Path) -> tuple[list[tuple[str, dict[str, str]]], list[str]]:
         rel = relative.as_posix()
         repeats = repeated_names(relative, facts.name)
         if repeats:
-            suspect.append(f"{rel} — repeats: {repeats}")
+            suspect.append(f"{facts.name}/{rel} — repeats: {repeats}")
         notes.append((rel, parse_frontmatter(path)))
     return notes, suspect
 
@@ -95,7 +95,7 @@ def clashes(notes: list) -> list[str]:
     by_name: dict[str, list[str]] = {}
     for rel, _ in notes:
         by_name.setdefault(Path(rel).stem, []).append(rel)
-    return [f"[[{name}]] is two articles: {', '.join(files)}"
+    return [f"[[{name}]] is written by: {', '.join(files)}"
             for name, files in sorted(by_name.items()) if len(files) > 1]
 
 

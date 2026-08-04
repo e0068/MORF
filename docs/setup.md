@@ -142,8 +142,10 @@ Say plainly if there is nothing to report. A quiet audit is a good result.
 ## The `CLAUDE.md` next to MORF
 
 The installer creates this file if it is missing and keeps the `Language`
-section between markers, so a repeat install replaces only that section. The
-rest is yours; the working order itself lives in the plugin's `morf` skill.
+section between markers, so a repeat install replaces only that section. It
+writes the title, the two lines under it and that section — the `Never` list
+below is an example to add yourself. The rest is yours; the working order
+itself lives in the plugin's `morf` skill.
 
 ```markdown
 # Notes
