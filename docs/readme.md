@@ -6,7 +6,7 @@ tags: [morf]
 
 # MORF
 
-**EN** — [RU](ru/readme.md)
+**EN** — [RU](ru/начало.md)
 
 **M**emory **o**f **O**bservations, **R**ules and **F**acts — three-phase memory for Claude.
 

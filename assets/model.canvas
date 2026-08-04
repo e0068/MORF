@@ -234,12 +234,12 @@
   },
   {
    "id": "d_readme",
-   "type": "file",
-   "file": "MORF/Docs/readme.md",
+   "type": "text",
    "x": -1240,
    "y": 560,
    "width": 460,
-   "height": 480
+   "height": 160,
+   "text": "**[[readme]]**\n\nEntry point: what lives where and where to start reading."
   },
   {
    "id": "g_know",
