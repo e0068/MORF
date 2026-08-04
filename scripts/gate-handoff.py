@@ -12,25 +12,32 @@ The prompt is echoed back in the message, because a gate that eats what you
 typed teaches you to hate it.
 
 Anything mentioning the handoff passes, or there would be no way out. So does
-deleting `.pending` by hand — the owner works outside the agent's tools.
+deleting the pending file by hand — the owner works outside the tools.
 Any breakage fails open: a guard nobody can bypass is worse than no guard.
 No dependencies beyond the standard library.
 """
 
 import json
 import sys
+from pathlib import Path
 
 import morf
 
 # ===== Settings =====
 
-PENDING = morf.memory() / ".pending"
+STATE = morf.memory() / ".state"
 
 # The way out has to survive the block that prompted it.
 PASSES = ("handoff", "/morf", "morf:", "консолид")
 
 
 # ===== Decision =====
+
+def pending_of(cwd: str) -> Path:
+    """The state is keyed by the working folder — see archive-session.py."""
+    path = Path(cwd).expanduser() if cwd else Path.cwd()
+    return STATE / f"{str(path).strip('/').replace('/', '-') or 'root'}.pending"
+
 
 def prompt_of(event: dict) -> str:
     return str(event.get("prompt", ""))
@@ -46,16 +53,16 @@ def lets_through(prompt: str) -> bool:
 
 def main() -> None:
     try:
-        ref = PENDING.read_text(encoding="utf-8").strip()
-    except OSError:
-        return                      # nothing pending, or nothing readable
-    if not ref:
-        return
-
-    try:
         event = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
         return                      # cannot read the prompt, do not block it
+
+    try:
+        ref = pending_of(event.get("cwd", "")).read_text(encoding="utf-8").strip()
+    except OSError:
+        return                      # nothing pending here, or nothing readable
+    if not ref:
+        return
 
     prompt = prompt_of(event)
     if lets_through(prompt):

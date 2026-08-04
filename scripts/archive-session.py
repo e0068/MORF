@@ -30,8 +30,7 @@ HOME = morf.home()
 MEMORY = morf.memory()
 TRANSCRIPTS = MEMORY / "Transcripts"
 SESSIONS = MEMORY / "sessions.md"
-CURRENT = MEMORY / ".current.json"
-PENDING = MEMORY / ".pending"
+STATE = MEMORY / ".state"
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 
@@ -49,6 +48,27 @@ def read_event() -> dict:
 def session_slug(session_id: str, day: date) -> str:
     """Short identifier such as 260803-a41f."""
     return f"{day:%y%m%d}-{session_id[:4] or 'xxxx'}"
+
+
+def project_key(cwd: str) -> str:
+    """A file name for the working folder, so state is not shared between them.
+
+    One state file for every project made whichever session started last the
+    owner of `/handoff`: it answered with another project's slug, then with a
+    transcript that no longer existed. The command knows no session id, only
+    the folder it runs in — so the folder is what the state is keyed by.
+    Two sessions in the *same* folder still share a slot; that one is open.
+    """
+    path = Path(cwd).expanduser() if cwd else Path.cwd()
+    return str(path).strip("/").replace("/", "-") or "root"
+
+
+def current_of(cwd: str) -> Path:
+    return STATE / f"{project_key(cwd)}.json"
+
+
+def pending_of(cwd: str) -> Path:
+    return STATE / f"{project_key(cwd)}.pending"
 
 
 def project_name(cwd: str) -> str:
@@ -103,14 +123,15 @@ def append_row(slug: str, day: date, project: str) -> None:
 
 # ===== Session state =====
 
-def remember(slug: str, transcript: str) -> None:
+def remember(slug: str, transcript: str, cwd: str) -> None:
     """The hook knows the transcript path, the command does not. Remember it."""
-    CURRENT.parent.mkdir(parents=True, exist_ok=True)
-    CURRENT.write_text(json.dumps({"slug": slug, "transcript": transcript, "mark": 0}),
+    current = current_of(cwd)
+    current.parent.mkdir(parents=True, exist_ok=True)
+    current.write_text(json.dumps({"slug": slug, "transcript": transcript, "mark": 0}),
                        encoding="utf-8")
 
 
-def unfinished(slug: str) -> str:
+def unfinished(slug: str, cwd: str) -> str:
     """Checks whether the previous session was cut short and finishes its copy.
 
     The previous state always stays on disk; what matters is whether its tail
@@ -119,7 +140,7 @@ def unfinished(slug: str) -> str:
     Returns a message for the agent: SessionStart stdout reaches the context.
     """
     try:
-        state = json.loads(CURRENT.read_text(encoding="utf-8"))
+        state = json.loads(current_of(cwd).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return ""
     if state.get("slug") == slug:
@@ -135,7 +156,7 @@ def unfinished(slug: str) -> str:
     if start > lines:
         return ""   # everything processed, only an empty tail was cut
     ref = f"s:{state['slug']}#{start}-{lines}"
-    PENDING.write_text(ref, encoding="utf-8")
+    pending_of(cwd).write_text(ref, encoding="utf-8")
     return (f"The previous session was cut short before /handoff. Its transcript "
             f"has been swept in; the stretch {ref} is unprocessed — run /handoff "
             f"for it before taking on anything new.")
@@ -148,10 +169,11 @@ def handoff() -> str:
     last line is the mark: the range between two calls defines the stretch
     without a single guess.
     """
+    current = current_of("")
     try:
-        state = json.loads(CURRENT.read_text(encoding="utf-8"))
+        state = json.loads(current.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return "current session is not registered: SessionStart did not run"
+        return "this folder has no registered session: SessionStart did not run here"
 
     origin = Path(state["transcript"]).expanduser()
     if not origin.is_file():
@@ -160,8 +182,8 @@ def handoff() -> str:
     copy_transcripts(state["transcript"], state["slug"])
     lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
     start, state["mark"] = state["mark"] + 1, lines
-    CURRENT.write_text(json.dumps(state), encoding="utf-8")
-    PENDING.unlink(missing_ok=True)
+    current.write_text(json.dumps(state), encoding="utf-8")
+    pending_of("").unlink(missing_ok=True)
     return f"s:{state['slug']}#{start}-{lines}"
 
 
@@ -204,9 +226,10 @@ def main() -> None:
     today = date.today()
     slug = session_slug(event.get("session_id", ""), today)
 
-    message = unfinished(slug)
-    append_row(slug, today, project_name(event.get("cwd", "")))
-    remember(slug, event.get("transcript_path", ""))
+    cwd = event.get("cwd", "")
+    message = unfinished(slug, cwd)
+    append_row(slug, today, project_name(cwd))
+    remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
     if message:
         print(message)
