@@ -6,7 +6,7 @@ tags: [morf, setup]
 
 # Setup
 
-The model lives on the canvas at `Claude/Memory/model.canvas`; the reasoning is
+The model lives on the canvas at `MORF/Memory/model.canvas`; the reasoning is
 in these notes. This file holds only what is in neither: how to install and the
 texts of the commands.
 
@@ -35,7 +35,7 @@ Through the marketplace, if you prefer:
 
 ```
 <vault>/
-├── Claude/
+├── MORF/
 │   ├── Memory/
 │   │   ├── Scripts/        five scripts and config.json
 │   │   ├── Transcripts/    the conversation archive
@@ -43,8 +43,8 @@ Through the marketplace, if you prefer:
 │   │   ├── sessions.md · audit.md · levels.md
 │   │   ├── TAGS.md · INDEX.md
 │   │   └── model.canvas
-│   └── Facts/              fact articles
-└── docs/                   these notes
+│   ├── Facts/              fact articles
+│   └── Docs/               these notes
 ```
 
 `~/.claude/memory-vault` holds the path to the vault; every script reads it, so
@@ -74,7 +74,7 @@ Reconcile what happened with what the system predicted.
    A refutation matters more than a new finding — never skip it for brevity.
    If a rule received an `inverse`, tell me at once: it is suspended now.
 
-3. Unexpected outcomes become a new line in `Claude/Memory/<project>/L0.md`:
+3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
    Write it in the indicative. An observation is what occurred.
 
@@ -94,7 +94,7 @@ Take me back to the conversation a line came from.
 
 The argument is a fragment of an observation, an article or a rule.
 
-1. Find it across `Claude/Memory/`, including `dropped.md`, in fact articles
+1. Find it across `MORF/Memory/`, including `dropped.md`, in fact articles
    and in rule files. Say where it lives.
 2. For each source, run:
    `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/read-session.py <ref> <keyword>`
@@ -113,9 +113,9 @@ Finally, ask what to do with the line: keep it, restate it, or drop it.
 ```markdown
 Audit the memory of the current project. Change nothing: report only.
 
-1. Read `Claude/Memory/<project>/dropped.md` — entries displaced within the
+1. Read `MORF/Memory/<project>/dropped.md` — entries displaced within the
    last hundred sessions — and every line added since the `last` session id
-   recorded in `Claude/Memory/audit.md`.
+   recorded in `MORF/Memory/audit.md`.
 
 2. Compare them by meaning, not by wording. Report pairs where something
    displaced earlier was written down again as a new observation.
@@ -129,7 +129,7 @@ Audit the memory of the current project. Change nothing: report only.
    top level for over three periods without an exit; whether `dropped.md`
    grows faster than the levels.
 
-4. Append the result to `Claude/Memory/audit.md` with the current session id
+4. Append the result to `MORF/Memory/audit.md` with the current session id
    as the new `last`. Keep previous entries — this file is a history.
 
 Say plainly if there is nothing to report. A quiet audit is a good result.
@@ -144,14 +144,14 @@ rest is yours; the working order itself lives in the plugin's `morf` skill.
 ```markdown
 # Vault
 
-Memory lives in `Claude/Memory`, fact articles in `Claude/Facts`.
+Memory lives in `MORF/Memory`, fact articles in `MORF/Facts`.
 The working order is in the `morf` skill of the morf plugin.
 
 ## Never
 
 - Do not touch `[S= R= t=]` by hand: `score-memory.py` writes them.
 - Do not edit `TAGS.md`, `INDEX.md`, `sessions.md`, `levels.md`: generated.
-- Never write to or delete from `Claude/Memory/Transcripts`.
+- Never write to or delete from `MORF/Memory/Transcripts`.
 - Delete nothing else either. Displaced lines go to `dropped.md` with sources.
 
 <!-- morf:language -->

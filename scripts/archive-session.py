@@ -27,9 +27,10 @@ import vault
 # ===== Settings =====
 
 VAULT = vault.root()
-TRANSCRIPTS = VAULT / "Claude" / "Memory" / "Transcripts"
-SESSIONS = VAULT / "Claude" / "Memory" / "sessions.md"
-CURRENT = VAULT / "Claude" / "Memory" / ".current.json"
+MEMORY = vault.memory()
+TRANSCRIPTS = MEMORY / "Transcripts"
+SESSIONS = MEMORY / "sessions.md"
+CURRENT = MEMORY / ".current.json"
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 SIBLING_WINDOW_SEC = 60 * 60 * 12   # slack to catch subagent files
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"

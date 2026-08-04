@@ -4,8 +4,8 @@
 TAGS.md   — tag, how many articles, where exactly. First hop of a search.
 INDEX.md  — path, description, scope, applied. Second hop.
 
-The whole vault is indexed except Claude/Memory: fact articles live in
-Claude/Facts by default, but anything written by hand elsewhere also
+The whole vault is indexed except MORF/Memory: fact articles live in
+MORF/Facts by default, but anything written by hand elsewhere also
 lands on the map as long as it carries front matter.
 
 The fact layer is the only one that never reaches the agent on its own:
@@ -21,10 +21,10 @@ import vault
 # ===== Settings =====
 
 VAULT = vault.root()
-INDEX_FILE = VAULT / "Claude" / "Memory" / "INDEX.md"
-TAGS_FILE = VAULT / "Claude" / "Memory" / "TAGS.md"
+INDEX_FILE = vault.memory() / "INDEX.md"
+TAGS_FILE = vault.memory() / "TAGS.md"
 SKIP_DIRS = {".obsidian", ".git", ".trash"}
-SKIP_PREFIX = ("Claude/Memory", "Claude/Docs")   # machinery, observations and docs; facts sit beside, in Claude/Facts
+SKIP_PREFIX = (f"{vault.FOLDER}/Memory", f"{vault.FOLDER}/Docs")   # machinery, observations and docs; facts sit beside, in MORF/Facts
 FIELDS = ("type", "description", "tags", "scope", "applied")
 TAG_FILES_SHOWN = 12
 
@@ -34,7 +34,7 @@ TAG_FILES_SHOWN = 12
 def repeated_names(relative: Path) -> str:
     """A folder name states its relation to the parent, not a standalone label.
 
-    `Claude/Memory/Memory` would read as "memory of memory", which is not a
+    `MORF/Memory/Memory` would read as "memory of memory", which is not a
     thing, so the level is spurious. The check: read the path bottom-up as a
     phrase; a repeated name means the phrase does not hold together.
     """

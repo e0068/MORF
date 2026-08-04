@@ -21,8 +21,7 @@ import vault
 
 # ===== Settings =====
 
-VAULT = vault.root()
-MEMORY = VAULT / "Claude" / "Memory"
+MEMORY = vault.memory()
 SESSIONS = MEMORY / "sessions.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 

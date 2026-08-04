@@ -42,7 +42,7 @@
   {
    "id": "archive",
    "type": "text",
-   "text": "**`Claude/Memory/Transcripts/<id>/`**\n\nA folder per session holding all its files, subagent transcripts included.\n\nRaw, never retold. Permanent: never deleted. `.jsonl` is not indexed by note editors.",
+   "text": "**`MORF/Memory/Transcripts/<id>/`**\n\nA folder per session holding all its files, subagent transcripts included.\n\nRaw, never retold. Permanent: never deleted. `.jsonl` is not indexed by note editors.",
    "x": 0,
    "y": 782,
    "width": 460,
@@ -235,7 +235,7 @@
   {
    "id": "d_readme",
    "type": "file",
-   "file": "Claude/Docs/readme.md",
+   "file": "MORF/Docs/readme.md",
    "x": -1240,
    "y": 560,
    "width": 460,
@@ -264,7 +264,7 @@
   {
    "id": "know",
    "type": "text",
-   "text": "**Article about a phenomenon** · `Claude/Facts`\n\nA subject per file, not a fact per file: it gathers observations as they arrive.\n\n```yaml\ndescription, tags\nscope: [project]\napplied: 3\n```\n\nSections by facet, each with its own `s:` sources, and `[[…]]` links to related phenomena.\n\nA repeat adds an `s:` to an existing paragraph; a new section is for a new facet.",
+   "text": "**Article about a phenomenon** · `MORF/Facts`\n\nA subject per file, not a fact per file: it gathers observations as they arrive.\n\n```yaml\ndescription, tags\nscope: [project]\napplied: 3\n```\n\nSections by facet, each with its own `s:` sources, and `[[…]]` links to related phenomena.\n\nA repeat adds an `s:` to an existing paragraph; a new section is for a new facet.",
    "x": 1180,
    "y": 2756,
    "width": 460,

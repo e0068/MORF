@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 
 POINTER = Path.home() / ".claude" / "memory-vault"
+FOLDER = "MORF"     # the one folder we own inside the chosen vault; named once, here
 
 
 def root() -> Path:
@@ -22,5 +23,9 @@ def root() -> Path:
     return Path.home() / "Vault"
 
 
+def home() -> Path:
+    return root() / FOLDER
+
+
 def memory() -> Path:
-    return root() / "Claude" / "Memory"
+    return home() / "Memory"

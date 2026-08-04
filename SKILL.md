@@ -1,6 +1,6 @@
 ---
 name: morf
-description: MORF — Memory of Observations, Rules and Facts. Working order for the three-phase memory: what to read at session start, how to consolidate the levels, and how an observation turns into a rule or a fact article. Use whenever a session begins in a vault that has Claude/Memory, when the user asks about memory, observations, facts or rules, or when a session-start hook reports an unfinished stretch.
+description: MORF — Memory of Observations, Rules and Facts. Working order for the three-phase memory: what to read at session start, how to consolidate the levels, and how an observation turns into a rule or a fact article. Use whenever a session begins in a vault that has MORF/Memory, when the user asks about memory, observations, facts or rules, or when a session-start hook reports an unfinished stretch.
 ---
 
 # MORF
@@ -9,8 +9,8 @@ description: MORF — Memory of Observations, Rules and Facts. Working order for
 markdown files. Observations accumulate and are consolidated level by level:
 what matures into "do it this way" becomes a rule, what stays true but yields
 no action settles as a fact article.
-The full model is on the canvas at `Claude/Memory/model.canvas`;
-the reasoning is in `Claude/Docs/`.
+The full model is on the canvas at `MORF/Memory/model.canvas`;
+the reasoning is in `MORF/Docs/`.
 
 ## At session start
 
@@ -19,10 +19,10 @@ the reasoning is in `Claude/Docs/`.
    it gave you. The transcript is archived, but nobody turned it into
    observations yet.
 
-2. Read for the current project: `Claude/Memory/<project>/L3.md`, `L2.md`,
+2. Read for the current project: `MORF/Memory/<project>/L3.md`, `L2.md`,
    `L1.md`. Do not read `L0.md` — it is input for consolidation, not memory.
 
-3. Read `Claude/Memory/levels.md`: it lists the levels, their horizons and
+3. Read `MORF/Memory/levels.md`: it lists the levels, their horizons and
    line limits. It is generated from `Scripts/config.json`; never edit it.
 
 4. If the first level changed or is approaching its limit, consolidate
@@ -40,7 +40,7 @@ the reasoning is in `Claude/Docs/`.
    - promote a line one level up, displacing the weakest by `S`
    - report what changed in a single table
 
-5. Check `Claude/Memory/audit.md`. Ten or more sessions of this project since
+5. Check `MORF/Memory/audit.md`. Ten or more sessions of this project since
    its `last` id — run `/morf:audit` before starting work. Do not ask me
    whether to run it: I am not the timer.
 
@@ -59,14 +59,14 @@ the reasoning is in `Claude/Docs/`.
 - A tag earns its place when at least two articles carry it. Never invent
   tags outside `TAGS.md`; propose additions instead.
 - A folder name states its relation to its parent. Read a path bottom-up as
-  a phrase before creating it: `Claude/Memory/Memory` would read as "memory
+  a phrase before creating it: `MORF/Memory/Memory` would read as "memory
   of memory", which is not a thing.
 
 ## Never
 
 - Do not touch `[S= R= t=]` by hand: `score-memory.py` writes them.
 - Do not edit `TAGS.md`, `INDEX.md`, `sessions.md`, `levels.md`: generated.
-- Never write to or delete from `Claude/Memory/Transcripts`. It is filled by
+- Never write to or delete from `MORF/Memory/Transcripts`. It is filled by
   copying from Claude Code's own history and by nothing else. A hook blocks it.
 - Delete nothing else either. Displaced lines go to `dropped.md` with sources.
 - If a rule is violated often, propose making it a hook, but never move it

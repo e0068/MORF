@@ -15,7 +15,7 @@ Reconcile what happened with what the system predicted.
    A refutation matters more than a new finding — never skip it for brevity.
    If a rule received an `inverse`, tell me at once: it is suspended now.
 
-3. Unexpected outcomes become a new line in `Claude/Memory/<project>/L0.md`:
+3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
    Write it in Russian, in the indicative. An observation is what occurred.
 

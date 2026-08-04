@@ -14,9 +14,11 @@ No dependencies beyond the standard library.
 import json
 import sys
 
+import vault
+
 # ===== Settings =====
 
-GUARDED = "Claude/Memory/Transcripts"
+GUARDED = f"{vault.FOLDER}/Memory/Transcripts"
 WRITERS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 SHELL = ("Bash", "BashOutput")
 DESTRUCTIVE = ("rm ", "rm\t", "mv ", "truncate", "> ", "shred", "unlink")

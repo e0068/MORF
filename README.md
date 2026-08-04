@@ -44,8 +44,8 @@ Through the marketplace, if you prefer:
 | `/morf:audit` | threshold review every tenth session of the project |
 | skill `morf` | what to read at session start, how to consolidate, where things go |
 
-The model is on the canvas at `Claude/Memory/model.canvas`, the reasoning is
-in [`Claude/Docs/`](docs/readme.md).
+The model is on the canvas at `MORF/Memory/model.canvas`, the reasoning is
+in [`MORF/Docs/`](docs/readme.md).
 
 ## Three categories
 
