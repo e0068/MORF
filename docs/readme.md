@@ -8,7 +8,7 @@ tags: [morf]
 
 **M**emory **o**f **O**bservations, **R**ules and **F**acts — three-phase memory for Claude.
 
-The order of the letters is the priority of exits: an observation is made for the sake of a rule, and settles as a fact article only when no imperative follows from it. The flow runs the other way: observations → facts → rules.
+At the end of a piece of work the agent records what happened and was unexpected. Those observations accumulate, get scored and are consolidated level by level. What matures into "do it this way" becomes a rule; what stays true but yields no action settles as an article about the phenomenon; what stops being confirmed and used is displaced with its sources intact.
 
 One vault, two windows. In Claude you hand out tasks and ask questions; in a notes editor you look at the same thing yourself. There are no copies — the files are the same.
 
@@ -16,13 +16,35 @@ One vault, two windows. In Claude you hand out tasks and ask questions; in a not
 
 The whole model rests on these being **different entities with different mechanics**, and confusing them is expensive.
 
-| | What it is | Mood | Verified by |
-|---|---|---|---|
-| **Observation** | what happened and was unexpected | indicative | refuted by experience |
-| **Fact** | an article about a phenomenon: true, repeatable, yields no action | indicative | refuted by experience |
-| **Rule** | how we act from now on | imperative | only obeyed or broken |
+| | What it is | Mood | Verified by | Access |
+|---|---|---|---|---|
+| **Observation** | what happened and was unexpected | indicative | refuted by experience | fast: read at session start |
+| **Fact** | an article about a phenomenon: true, repeatable, yields no action | indicative | refuted by experience | slow: found by search |
+| **Rule** | how we act from now on | imperative | only obeyed or broken | fast: loaded by the mechanism |
+
+The access column explains a lot of the design. Observations and rules arrive on their own, so they are kept under hard limits: the context is finite and everything loaded costs something every session. Facts are loaded by nobody until somebody looks for them, so they may be any number — and that is exactly why the fact layer needs two indexes while the other two need none.
 
 The link is one-way and it is the point of the construction: **memory is a queue of candidate rules**. An observation either matures into a rule, or turns out to be a fact, or decays. No outcome is silent.
+
+## Three axes
+
+Each axis pairs up two of the three, and no pair repeats.
+
+| Axis | Observations | Facts | Rules |
+|---|---|---|---|
+| **Mood** | indicative | indicative | imperative |
+| **Access** | fast | slow | fast |
+| **Persistence** | transient | persistent | persistent |
+
+Observations and facts meet on mood, observations and rules on access, facts
+and rules on persistence. Every pair shares exactly one axis, and no two
+entities match on all three.
+
+The axes are not decoration: each one drives a mechanism. Mood is what the
+intake filter checks. Access decides who needs indexes — only the slow layer
+does. Persistence decides who decays: an observation exists to be
+resolved into a rule, a fact or `dropped`, and stops existing once it is, while
+a fact and a rule are outcomes that stand until disproven.
 
 ## Who does what
 

@@ -6,11 +6,10 @@ description: MORF — Memory of Observations, Rules and Facts. Working order for
 # MORF
 
 **M**emory **o**f **O**bservations, **R**ules and **F**acts, kept as plain
-markdown files.
-The order in the name is the priority of exits: an observation is made for
-the sake of a rule, and settles as a fact article only when no imperative
-follows from it.
-The full model is on the canvas at `Claude/Memory/модель-памяти.canvas`;
+markdown files. Observations accumulate and are consolidated level by level:
+what matures into "do it this way" becomes a rule, what stays true but yields
+no action settles as a fact article.
+The full model is on the canvas at `Claude/Memory/model.canvas`;
 the reasoning is in `Claude/Docs/`.
 
 ## At session start

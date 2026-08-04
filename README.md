@@ -1,16 +1,20 @@
 # MORF
 
-**M**emory **o**f **O**bservations, **R**ules and **F**acts.
+**English** · [Русский](README.ru.md)
 
-The order of the letters is the priority of exits, not the flow. An observation
-is made for the sake of a rule: a rule is the main exit, and the whole queue
-exists for it. Facts are the side exit, for what yields no action.
+**M**emory **o**f **O**bservations, **R**ules and **F**acts — three-phase
+memory for Claude.
 
-The flow runs the other way: observations → facts → rules. Everything is
-traceable down to the raw conversation and stored as plain markdown files —
-any editor will do, and Obsidian is convenient for the canvas.
+At the end of a piece of work the agent writes down what happened and was
+unexpected. Those observations pile up, get scored, and are consolidated level
+by level. What matures into "do it this way" becomes a rule and starts loading
+in every session. What stays true but yields no action settles as an article
+about the phenomenon. What stops being confirmed and used is displaced, with
+its sources intact.
 
-[По-русски](README.ru.md)
+Every line keeps a reference to the stretch of conversation it came from, so
+any of it can be traced back and disputed. Everything is stored as plain
+markdown files: any editor will do, and Obsidian is convenient for the canvas.
 
 ## Install
 
@@ -45,14 +49,39 @@ in [`Claude/Docs/`](docs/readme.md).
 
 ## Three categories
 
-| | What it is | Mood |
-|---|---|---|
-| **Observation** | what happened and was unexpected | indicative |
-| **Fact** | an article about a phenomenon that yields no action | indicative |
-| **Rule** | how we act from now on | imperative |
+| | What it is | Mood | Access |
+|---|---|---|---|
+| **Observation** | what happened and was unexpected | indicative | fast: read at session start |
+| **Fact** | an article about a phenomenon that yields no action | indicative | slow: found by search |
+| **Rule** | how we act from now on | imperative | fast: loaded by the mechanism |
+
+Observations and rules arrive on their own, so they have to stay small — the
+context is finite. Facts may be any number, because nothing loads them until
+somebody looks: `TAGS.md` narrows the map, `INDEX.md` points at the articles.
+That is why the fact layer has indexes and the other two do not.
 
 Memory is a queue of candidate rules. An observation either matures into a
 rule, or turns out to be a fact, or decays — and no outcome is silent.
+
+## Three axes
+
+Each axis pairs up two of the three, and no pair repeats.
+
+| Axis | Observations | Facts | Rules |
+|---|---|---|---|
+| **Mood** | indicative | indicative | imperative |
+| **Access** | fast | slow | fast |
+| **Persistence** | transient | persistent | persistent |
+
+Observations and facts meet on mood, observations and rules on access, facts
+and rules on persistence. Every pair shares exactly one axis, and no two
+entities match on all three.
+
+The axes are not decoration: each one drives a mechanism. Mood is what the
+intake filter checks. Access decides who needs indexes — only the slow layer
+does. Persistence decides who decays: an observation exists to be
+resolved into a rule, a fact or `dropped`, and stops existing once it is, while
+a fact and a rule are outcomes that stand until disproven.
 
 ## License
 
