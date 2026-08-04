@@ -233,15 +233,6 @@
    "color": "3"
   },
   {
-   "id": "d_readme",
-   "type": "text",
-   "x": -1240,
-   "y": 560,
-   "width": 460,
-   "height": 160,
-   "text": "**[[readme]]**\n\nEntry point: what lives where and where to start reading."
-  },
-  {
    "id": "g_know",
    "type": "group",
    "label": "FACTS",
