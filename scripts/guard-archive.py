@@ -14,11 +14,12 @@ No dependencies beyond the standard library.
 import json
 import sys
 
-import vault
-
 # ===== Settings =====
 
-GUARDED = f"{vault.FOLDER}/Memory/Transcripts"
+# The folder name is spelled out rather than taken from vault.py on purpose:
+# this hook runs on every tool call, and a guard that fails open because a
+# sibling import broke is worse than a name written twice.
+GUARDED = "MORF/Memory/Transcripts"
 WRITERS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 SHELL = ("Bash", "BashOutput")
 DESTRUCTIVE = ("rm ", "rm\t", "mv ", "truncate", "> ", "shred", "unlink")

@@ -23,9 +23,5 @@ def root() -> Path:
     return Path.home() / "Vault"
 
 
-def home() -> Path:
-    return root() / FOLDER
-
-
 def memory() -> Path:
-    return home() / "Memory"
+    return root() / FOLDER / "Memory"
