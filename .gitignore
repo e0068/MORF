@@ -21,3 +21,6 @@ htmlcov/
 
 # Локальное
 .claude/settings.local.json
+
+# Сборка
+dist/
