@@ -43,9 +43,12 @@ the reasoning is in `MORF/Docs/`.
    - promote a line one level up, displacing the weakest by `S`
    - report what changed in a single table
 
-5. Check `MORF/Memory/audit.md`. Ten or more sessions of this project since
-   its `last` id — run `/morf:audit` before starting work. Do not ask me
-   whether to run it: I am not the timer.
+5. The session start counts what is owed and says it: a consolidation the
+   levels are waiting for, an audit past its ten sessions, a facts map older
+   than the articles in it. Nothing here is yours to remember — do the work
+   it names before starting, and never ask me whether to: I am not the timer.
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --all` says it for every
+   project at once.
 
 ## Writing
 

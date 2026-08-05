@@ -22,6 +22,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import due
 import morf
 
 # ===== Settings =====
@@ -74,9 +75,14 @@ def pending_of(cwd: str) -> Path:
 
 
 def project_name(cwd: str) -> str:
-    """Project name from the working folder; a dash for MORF itself."""
+    """Project name from the working folder.
+
+    A dash for MORF itself and for the home directory: a session started in
+    `~` is not working on a project called after the account, and shelves
+    built for it collect sessions that belong to no memory at all.
+    """
     path = Path(cwd) if cwd else Path.cwd()
-    return "—" if path == HOME else path.name
+    return "—" if path in (HOME, Path.home()) else path.name
 
 
 # ===== Actions =====
@@ -303,10 +309,16 @@ def main() -> None:
     sweep()
 
     notice = crowding(project)
+    obligations = due.owed(project)
+    blocking = [text for text, hard in obligations if hard]
+    if notice and "displace" in notice:
+        blocking.insert(0, notice)
+
     pending = pending_of(cwd)
-    if notice and "displace" in notice and not pending.exists():
-        pending.write_text(notice, encoding="utf-8")   # past the limit it blocks
-    for text in (message, notice):
+    if blocking and not pending.exists():
+        pending.write_text(" · ".join(blocking), encoding="utf-8")
+
+    for text in (message, notice, *(text for text, _ in obligations)):
         if text:
             print(text)
 
