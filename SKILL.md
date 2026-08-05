@@ -48,7 +48,8 @@ the reasoning is in `MORF/Docs/`.
    sessions, a facts map older than its articles. All of it is yours to
    discharge and none of it is mine to be asked about — I am not the timer,
    and I am not the one who forgot. Never turn a debt of yours into a
-   question for me. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --all`
+   question for me. A turn does not end while a debt stands: either do the
+   work or say in the answer that you left it, and why. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --all`
    says it for every project at once.
 
 ## Writing

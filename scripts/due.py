@@ -19,6 +19,7 @@ passed since. The audit counts sessions since the id in `audit.md`.
     python3 due.py            what the current folder's project owes
     python3 due.py --all      every project
     python3 due.py --prompt   the same, addressed to the agent, on every turn
+    python3 due.py --stop     refuses to let a turn end while a debt stands
 
 No dependencies beyond the standard library.
 """
@@ -169,7 +170,36 @@ def as_instruction() -> None:
         print(f"  - {text}")
 
 
+def as_refusal() -> None:
+    """Will not let the turn end while something is owed.
+
+    Saying it at the start of a turn is easy to read past, because the turn
+    still ends however it likes. `Stop` is the one point where the answer is
+    already written and the debt is still there, so exit 2 sends it back —
+    the agent finishes the work or says in the answer that it did not.
+
+    `stop_hook_active` marks a turn already sent back once. Blocking again
+    would loop, and a loop is not pressure, it is a hang.
+    """
+    try:
+        event = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return
+    if event.get("stop_hook_active"):
+        return
+    cwd = event.get("cwd") or str(Path.cwd())
+    debts = owed(Path(cwd).name, cwd)
+    if not debts:
+        return
+    print("MORF: this turn cannot end while the memory is owed work. Discharge it, "
+          "or say plainly in the answer that you are leaving it:\n  - "
+          + "\n  - ".join(debts), file=sys.stderr)
+    sys.exit(2)
+
+
 def main() -> None:
+    if "--stop" in sys.argv:
+        return as_refusal()
     if "--prompt" in sys.argv:
         return as_instruction()
     projects = ([p.name for p in sorted(MEMORY.iterdir())

@@ -39,6 +39,7 @@ Through the marketplace, if you prefer:
 |---|---|
 | hook `SessionStart` | registers the session, sweeps in cut-short transcripts, gives the project its shelves, says what the memory owes |
 | hook `UserPromptSubmit` | puts what the memory owes in front of the agent, every turn |
+| hook `Stop` | will not let a turn end while a debt stands unsaid |
 | hook `PreToolUse` | keeps tools out of the conversation archive |
 | `/morf:handoff` | reconciliation at the end of a piece of work: transcript copy, counters, new observations |
 | `/morf:why` | from a line back to the conversation it came from |
