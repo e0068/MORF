@@ -46,10 +46,16 @@ DEFAULTS = {
 # lines and hand-written ones both parse.
 LINE_RE = re.compile(
     r"^(?P<head>- (?:↑ )?)"
-    r"(?:hit:(?P<hit>\d+) ?)?(?:use:(?P<use>\d+) ?)?"
-    r"(?:miss:(?P<miss>\d+) ?)?(?:inverse:(?P<inverse>\d+) ?)?"
-    r"(?: ?\[S=[^\]]*\])?"     # пробел уже съеден счётчиком выше; якорь на `S=`,
-                               # иначе группа съест текст, начинающийся с `[[ссылки]]`
+    # The space sits between the parts, not inside them: a counter that ate its
+    # own trailing space left the score block with nothing to match against,
+    # and the block then landed in the text and was doubled on the next run.
+    #
+    # The block is anchored on `S=` rather than on any bracket, because a rule
+    # or an observation may legitimately begin with one — `[WIP] …`, or a
+    # `[[link]]` — and an unanchored group swallows it silently.
+    r"(?:hit:(?P<hit>\d+))? ?(?:use:(?P<use>\d+))? ?"
+    r"(?:miss:(?P<miss>\d+))? ?(?:inverse:(?P<inverse>\d+))? ?"
+    r"(?:\[S=[^\]]*\])?"
     r"(?P<text>.+?)"
     r"\((?P<sources>s:[^)]*)\)\s*$"
 )
