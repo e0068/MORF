@@ -58,7 +58,7 @@ def main() -> None:
         path = Path(target).expanduser().resolve()
         if str(path) not in rules.foreign(cwd):
             return
-        gone, _, _ = rules.unaccounted(path, Path(cwd))
+        gone, _ = rules.unaccounted(path, Path(cwd))
     except Exception:                      # noqa: BLE001
         return
     if not gone:

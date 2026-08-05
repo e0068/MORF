@@ -25,6 +25,7 @@ No dependencies beyond the standard library.
 """
 
 import difflib
+import itertools
 import json
 import re
 import sys
@@ -241,14 +242,23 @@ def replay(log: Path) -> tuple[list[str], list[str]]:
             if body not in live:                          # adding twice is one rule
                 live.append(body)
             continue
+        # widened / narrowed / returned all read `old → target`, and the sign on
+        # the target decides what happened, not the verb: a bare wording means
+        # the rule stays reworded, an `@address` means it left for that address.
+        # A move with no arrow is malformed and reported, never dropped in
+        # silence — that silent drop is the exact failure this layer exists to
+        # catch.
+        if "→" not in body:
+            broken.append(f"{verb}: {body}")
+            continue
         move = split_move(body, live)
         if move is None:
             broken.append(f"{verb}: {body}")
             continue
         left, right = move
         live.remove(left)
-        if verb == "narrowed" and right and not right.startswith("@"):
-            live.append(right)                            # reworded, still here
+        if verb in ("narrowed", "widened") and right and not right.startswith("@"):
+            live.append(right)                            # reworded in place, still here
     return live, broken
 
 
@@ -267,31 +277,27 @@ def items(path: Path) -> list[str]:
     return found
 
 
-def unaccounted(path: Path, cwd: Path) -> tuple[list[str], list[str], list[str]]:
-    """(gone or changed, added by hand, unresolvable log entries).
+def unaccounted(path: Path, cwd: Path) -> tuple[list[str], list[str]]:
+    """(rules gone or changed, unresolvable log entries).
 
-    gone     — the log knows these rules and the file no longer holds them;
-    extra    — items the log does not know;
-    broken   — a log entry that does not read back.
-
-    Only the first is a debt, and `extra` is not reported anywhere: MORF
-    accounts for what it wrote into a file and for nothing else. An item the
-    owner put there is theirs, works as it always did, and is not this layer's
-    to notice, propose or chase. It enters only on the owner's explicit word,
-    through `--adopt`, which is why that command is never suggested.
+    MORF accounts for what it wrote into a file and for nothing else. An item
+    the owner put there is theirs — it works as it always did and is not this
+    layer's to notice, propose or chase. So an item the log does not know is
+    not reported anywhere; there is no third list. Such a rule enters only on
+    the owner's explicit word, through `--adopt`, which is why that command is
+    never suggested.
     """
     found = snapshot_of(path, cwd)
     if not found:
-        return [], [], []
+        return [], []
     scope, relative = found
     snap, log = pair(scope, relative)
     if not snap.exists():
-        return [], [], []
+        return [], []
     present = items(path)
     known, broken = replay(log)
     gone = [rule for rule in known if rule not in present]
-    extra = [item for item in present if item not in known]
-    return gone, extra, broken
+    return gone, broken
 
 
 # ===== What is watched =====
@@ -305,34 +311,35 @@ def outside_rules(path: Path, snap: Path, log: Path) -> int:
     snapshot would store a copy nobody reads and the verb would have no
     producer.
 
-    The filter is membership, not shape, and it excludes both sides.
+    The filter is membership in the known rules, and nothing else. Shape alone
+    would drop a reworded owner-written bullet out of every report at once: the
+    log never claimed it, so it is not `gone`, and by shape it would be skipped
+    here too — the file would change and nothing would say so. So a changed
+    line counts unless it is a rule the log knows, which is already reported as
+    `gone`.
 
-    Shape alone would drop a reworded prose bullet out of every report at
-    once: the log never claimed it, so it is not `gone`; it was a candidate
-    before and after, so `extra` does not move; and as a list item it would be
-    skipped here too. So a changed line counts unless it is a bullet the file
-    or the log accounts for elsewhere:
-
-        a rule the log knows      — already reported as `gone`;
-        an item the file now has  — already reported as `extra`.
-
-    Excluding only the first would count the new half of an in-place rule
-    edit, and `outside:` reads "no rule touched" — asserting that about the
-    one line where a rule was touched. What remains counted is what nothing
-    else names: a removed bullet nobody accounted for, and prose.
+    The residual: the new wording of a rule edited in place is not a known
+    rule, so its `+` line counts as one, and `outside:` reads "no rule
+    touched". That one line prints directly under the `−` naming the rule that
+    moved, so it is legible; the alternative — excluding every bullet — hid
+    whole edits, which is worse.
     """
     try:
         was = snap.read_text(encoding="utf-8").splitlines()
         now = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         return 0
-    accounted = set(replay(log)[0]) | set(items(path))
+    known = set(replay(log)[0])
     moved = 0
-    for line in difflib.unified_diff(was, now, n=0, lineterm=""):
-        if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
+    # islice drops the two file headers `--- ` / `+++ `; matching them by content
+    # miscounted a removed `---` frontmatter line, which three of the five
+    # address types open with. Hunk headers start with `@` and fall through the
+    # `+`/`-` test below.
+    for line in itertools.islice(difflib.unified_diff(was, now, n=0, lineterm=""), 2, None):
+        if line[:1] not in ("+", "-"):
             continue
         bullet = BULLET_RE.match(line[1:])
-        if not (bullet and bullet.group("text") in accounted):
+        if not (bullet and bullet.group("text") in known):
             moved += 1
     return moved
 
@@ -372,7 +379,7 @@ def owed(project: str, cwd: str = "") -> list[str]:
             if not target.exists():
                 debts.append(f"rules: {target} is gone while MORF still watches it")
                 continue
-            gone, _, broken = unaccounted(target, here)
+            gone, broken = unaccounted(target, here)
         except Exception:                      # noqa: BLE001
             debts.append(f"rules: {relative} cannot be read")
             continue
@@ -382,10 +389,6 @@ def owed(project: str, cwd: str = "") -> list[str]:
         if broken:
             debts.append(f"rules: {len(broken)} entr(ies) in {target.name}'s log cannot be "
                          f"read back — run rules.py --diff")
-    # Items the log does not know are candidates, not debts: telling an added
-    # rule from added prose is impossible here, and charging for prose would
-    # make every freshly tracked file owe on every turn forever. They show up
-    # in `--diff` and nowhere else.
     return debts
 
 
@@ -414,7 +417,7 @@ def at_start(cwd: str, slug: str) -> None:
     drifted = []
     for scope, relative in watched(here):
         target = address(scope, relative, here)
-        gone, _, _ = unaccounted(target, here)
+        gone, _ = unaccounted(target, here)
         if gone:
             drifted.append(str(target))
     path = morf.state() / f"{morf.slot(cwd)}.rules"
@@ -504,16 +507,18 @@ def track(raw: str, cwd: Path) -> int:
 
 
 def adopt(raw: str, text: str, cwd: Path) -> int:
-    """Takes a line MORF did not write. Only ever on the owner's own word.
+    """Registers a rule: writes the register line and the `added:` log entry.
 
-    The layer watches what it generated. An instruction the owner wrote is
-    theirs: not a candidate, not a proposal, not something to ask about. This
-    command exists so that an older rule can still be brought in when they
-    decide to, and for no other reason — nothing in the system offers it.
+    Two callers, and they are not symmetric:
+        the agent, registering a rule MORF just wrote into the file — the
+            normal path, the last of the three steps in the skill;
+        the owner, naming an older line to bring in — the exception, never
+            offered, since the layer does not propose lines it did not write.
 
-    The source is the current session, and it marks when MORF started counting,
-    not where the rule came from: `/why` on it reaches the adoption and no
-    further.
+    Either way MORF starts accounting for the item from here on; the register
+    line and the `added:` entry are what "watched" means. The source is the
+    current session, and it marks when MORF started counting, not where the
+    rule came from: `/why` on it reaches the adoption and no further.
     """
     found = snapshot_of(Path(raw), cwd)
     if not found:
@@ -547,9 +552,10 @@ def diff(cwd: Path, only: str = "") -> int:
         target = address(scope, relative, cwd)
         if only and Path(only).expanduser().resolve() != target:
             continue
-        gone, _, broken = unaccounted(target, cwd)
-        snap_here, log_here = pair(scope, relative)
-        if not gone and not broken and not outside_rules(target, snap_here, log_here):
+        gone, broken = unaccounted(target, cwd)
+        snap, log = pair(scope, relative)
+        moved = outside_rules(target, snap, log)
+        if not gone and not broken and not moved:
             continue
         shown += 1
         print(f"\n{target}")
@@ -557,8 +563,6 @@ def diff(cwd: Path, only: str = "") -> int:
             print(f"  − {rule}")
         for entry in broken:
             print(f"  ! {entry}   (this log entry does not read back)")
-        snap, log = pair(scope, relative)
-        moved = outside_rules(target, snap, log)
         if moved:
             print(f"  · {moved} line(s) changed outside the rules since the last seal")
     if not shown:

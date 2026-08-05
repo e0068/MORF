@@ -120,7 +120,7 @@ The text must match an item in the file exactly, or the command refuses: it does
 
 The price is named: the source is the current session, and that marks when MORF started counting rather than where the rule came from. `/why` on such a rule reaches the conversation where it was taken in, and no further.
 
-Taking a file under watch a second time is refused. It would overwrite the snapshot and seal a foreign change nobody has accounted for — and sealing must be a deliberate act, with a command of its own.
+Taking a file under watch a second time does nothing and says so: the snapshot is left alone, because rewriting it would push its time past the log's and make the next seal refuse. Re-tracking is the only way to ask "is this watched", so it must not fail on the answer "yes".
 
 **Why this way.** The top level of the folder is the root a file hangs off, not its reach: reach is derived from the address and written in the header of the `map.md` section. Otherwise a skill from `~/.claude/skills/` would land in a folder named "everywhere", though it loads the most rarely of all. `.claude/rules/` is called `Paths` — `Rules/<project>/Rules` would repeat the name and stop reading as a phrase.
 
@@ -172,7 +172,7 @@ The rule's text stands in a file anyone may rewrite, and its disappearance would
 
 #### Drift
 
-**How it works.** What is compared is rule text: what the log knows about the file against what stands in the file. Drift is a rule gone, changed, or an item appearing where the log does not know it. Counters do not enter the comparison at all: they lie in the register, in MORF, and a file outside the contour does not carry them. Drift is a memory debt like consolidation and the audit, and it arrives by the same rules.
+**How it works.** What is compared is rule text: what the log knows about the file against what stands in the file. Drift is a rule the log knows gone or changed. An item the log does not know is not drift: MORF watches what it wrote, and what the owner put there is theirs. Counters do not enter the comparison at all: they lie in the register, in MORF, and a file outside the contour does not carry them. Drift is a memory debt like consolidation and the audit, and it arrives by the same rules.
 
 ```
 rules: CLAUDE.md changed and 2 rule(s) are unaccounted — run rules.py --diff
@@ -223,7 +223,7 @@ address: /Users/e0068/dev/MORF/CLAUDE.md
 - outside: 12 line(s) changed (by hand) — no rule touched
 ```
 
-Five verbs. `added` — the rule arrived from memory; `widened` and `narrowed` — movement along the reach axis while it is alive; `returned` — the exit back into observations, and its line says where the line moved and what was appended to it; `outside` — an edit that touched no rule. Every line carries a source reference or an explicit `(by hand)`; without either the line is invalid, as a memory line would be. The source closes the entry: whatever follows it is prose for a human, and nothing before it is. No character separates the reason inside the entry, because every candidate — an em dash, brackets — occurs in rule texts and would truncate them. The log is never deleted: a file may stop being watched, the history stays. `address:` in the header is the real path of the watched file: two same-named checkouts give one project key, and without that field the diff would be computed against a file this copy has never seen.
+Five verbs. `added` — the rule arrived from memory; `widened` and `narrowed` — movement along the reach axis while it is alive; `returned` — the exit back into observations, and its line says where the line moved and what was appended to it; `outside` — an edit that touched no rule. Every line carries a source reference or an explicit `(by hand)`; without either the line is invalid, as a memory line would be. The source closes the entry, and a reason may follow it after an em dash: `body (s:…) — reason`. That em dash is the one separator, chosen because it sits outside the body where nothing truncates a rule — a delimiter inside the body fails on the em dashes and brackets rule texts are full of. The log is never deleted: a file may stop being watched, the history stays. `address:` in the header records the file's real path for a human following `/why`. Two checkouts named alike share one watch — the snapshot folder is keyed by the folder name — and this field is how you notice from the log that you are standing in the other one.
 
 To the right of `→` stands either a new wording or an address — and an address always carries `@`. Telling them apart is not only the reader's problem: the set of a file's rules is derived from the log, so `narrowed: A → B` and `narrowed: A → @B` mean different things, and the sign decides which. A move requires the receiving file to be watched as well, otherwise the trail loses half of itself; what links the two entries is a shared source reference.
 
