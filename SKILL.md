@@ -17,7 +17,9 @@ the reasoning is in `MORF/Docs/`.
 1. If the session start reported an unfinished stretch from a previous
    session, run `/handoff` for that stretch first, using the reference
    it gave you. The transcript is archived, but nobody turned it into
-   observations yet.
+   observations yet. This one is enforced rather than advised: until the
+   stretch is handed off, `gate-handoff.py` refuses every prompt that is not
+   about the handoff itself, and hands the refused text back to be resent.
 
 2. Read for the current project: `MORF/Memory/<project>/L3.md`, `L2.md`,
    `L1.md`. Do not read `L0.md` — it is input for consolidation, not memory.
@@ -26,7 +28,8 @@ the reasoning is in `MORF/Docs/`.
    line limits. It is generated from `Scripts/config.json`; never edit it.
 
 4. If the first level changed or is approaching its limit, consolidate
-   before starting work:
+   before starting work. The session start says how full the inbox is and
+   refuses work once it is at the limit, where new lines displace old ones:
    - recompute scores: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/score-memory.py`
    - work top down: fill `L2` from `L1` first, then `L1` from `L0`.
      Bottom up a line would climb two levels in one pass.

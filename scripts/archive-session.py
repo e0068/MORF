@@ -30,9 +30,10 @@ HOME = morf.home()
 MEMORY = morf.memory()
 TRANSCRIPTS = MEMORY / "Transcripts"
 SESSIONS = MEMORY / "sessions.md"
-CURRENT = MEMORY / ".current.json"
+STATE = MEMORY / ".state"
+CONFIG_FILE = Path(__file__).with_name("config.json")
+DEFAULT_LEVELS = ["L0", "L1", "L2", "L3"]
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
-SIBLING_WINDOW_SEC = 60 * 60 * 12   # slack to catch subagent files
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 
 
@@ -51,6 +52,27 @@ def session_slug(session_id: str, day: date) -> str:
     return f"{day:%y%m%d}-{session_id[:4] or 'xxxx'}"
 
 
+def project_key(cwd: str) -> str:
+    """A file name for the working folder, so state is not shared between them.
+
+    One state file for every project made whichever session started last the
+    owner of `/handoff`: it answered with another project's slug, then with a
+    transcript that no longer existed. The command knows no session id, only
+    the folder it runs in — so the folder is what the state is keyed by.
+    Two sessions in the *same* folder still share a slot; that one is open.
+    """
+    path = Path(cwd).expanduser() if cwd else Path.cwd()
+    return str(path).strip("/").replace("/", "-") or "root"
+
+
+def current_of(cwd: str) -> Path:
+    return STATE / f"{project_key(cwd)}.json"
+
+
+def pending_of(cwd: str) -> Path:
+    return STATE / f"{project_key(cwd)}.pending"
+
+
 def project_name(cwd: str) -> str:
     """Project name from the working folder; a dash for MORF itself."""
     path = Path(cwd) if cwd else Path.cwd()
@@ -60,12 +82,13 @@ def project_name(cwd: str) -> str:
 # ===== Actions =====
 
 def copy_transcripts(source: str, slug: str) -> int:
-    """Copies the session transcript and everything written beside it.
+    """Copies the session transcript and the subagent files belonging to it.
 
-    Subagents write their files into the same project directory; which ones
-    exactly is unknown in advance, so take every file modified no earlier
-    than the start of the main transcript. Copied whole, with all structure:
-    turns, reasoning, tool calls.
+    Claude Code keeps a session's subagent transcripts in a folder named
+    after the session, next to the transcript itself. The `.jsonl` files
+    lying beside it are other sessions' transcripts, not this one's
+    children: picking siblings by modification time gathered peers, stored
+    every session twice, and never copied a subagent at all.
     """
     if not source:
         return 0
@@ -75,13 +98,17 @@ def copy_transcripts(source: str, slug: str) -> int:
 
     target = TRANSCRIPTS / slug
     target.mkdir(parents=True, exist_ok=True)
-    started = origin.stat().st_mtime - SIBLING_WINDOW_SEC
+    shutil.copy2(origin, target / origin.name)
+    copied = 1
 
-    copied = 0
-    for path in sorted(origin.parent.glob("*.jsonl")):
-        if path == origin or path.stat().st_mtime >= started:
-            shutil.copy2(path, target / path.name)
-            copied += 1
+    nested = origin.with_suffix("")
+    for path in sorted(nested.rglob("*")) if nested.is_dir() else []:
+        if not path.is_file():
+            continue
+        destination = target / path.relative_to(nested)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
+        copied += 1
     return copied
 
 
@@ -96,16 +123,83 @@ def append_row(slug: str, day: date, project: str) -> None:
         handle.write(f"| s:{slug} | {day:%Y-%m-%d} | {project} |  |\n")
 
 
+# ===== Shelves =====
+
+def levels() -> list[str]:
+    """Level names, from the same config score-memory.py reads."""
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))["levels"]
+    except (OSError, ValueError, KeyError):
+        return DEFAULT_LEVELS
+
+
+def crowding(project: str) -> str:
+    """Says whether the inbox is owed a consolidation, and how badly.
+
+    The cadence is written in levels.md and nothing ever checked it, so the
+    levels that are actually read stayed empty while L0 filled: an empty
+    upper level looks like a correct state, not a starved one. Past the
+    limit the loss becomes real — further lines displace earlier ones — so
+    that is where the notice stops being a notice.
+    """
+    if project in ("", "—"):
+        return ""
+    inbox = MEMORY / project / f"{levels()[0]}.md"
+    try:
+        held = sum(1 for line in inbox.read_text(encoding="utf-8").splitlines()
+                   if line.startswith("- "))
+    except OSError:
+        return ""
+    if not held:
+        return ""
+    limit = limits()[0]
+    if held >= limit:
+        return (f"{project}: the inbox holds {held} lines against a limit of {limit}. "
+                f"Further observations displace earlier ones. Consolidate before working.")
+    return (f"{project}: {held} of {limit} lines in the inbox, none consolidated. "
+            f"The levels that are read stay empty until they are filled from it.")
+
+
+def limits() -> list[int]:
+    """Line limits per level, from the same config."""
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))["limits"]
+    except (OSError, ValueError, KeyError):
+        return [40, 30, 25, 20]
+
+
+def prepare(project: str) -> int:
+    """Creates the project's shelves the first time the project is seen.
+
+    Nothing created them before: /handoff wrote an observation into L0 while
+    the levels above it — the ones that are read — did not exist, so the line
+    had nowhere to be promoted to and the gap showed only later. Existing
+    files are never touched, and MORF's own folder gets none.
+    """
+    if project in ("", "—"):
+        return 0
+    made = 0
+    for stem in levels() + ["dropped"]:
+        path = MEMORY / project / f"{stem}.md"
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"---\nname: {project}-{stem}\n---\n\n", encoding="utf-8")
+        made += 1
+    return made
+
+
 # ===== Session state =====
 
-def remember(slug: str, transcript: str) -> None:
+def remember(slug: str, transcript: str, cwd: str) -> None:
     """The hook knows the transcript path, the command does not. Remember it."""
-    CURRENT.parent.mkdir(parents=True, exist_ok=True)
-    CURRENT.write_text(json.dumps({"slug": slug, "transcript": transcript, "mark": 0}),
+    current = current_of(cwd)
+    current.parent.mkdir(parents=True, exist_ok=True)
+    current.write_text(json.dumps({"slug": slug, "transcript": transcript, "mark": 0}),
                        encoding="utf-8")
 
 
-def unfinished(slug: str) -> str:
+def unfinished(slug: str, cwd: str) -> str:
     """Checks whether the previous session was cut short and finishes its copy.
 
     The previous state always stays on disk; what matters is whether its tail
@@ -114,7 +208,7 @@ def unfinished(slug: str) -> str:
     Returns a message for the agent: SessionStart stdout reaches the context.
     """
     try:
-        state = json.loads(CURRENT.read_text(encoding="utf-8"))
+        state = json.loads(current_of(cwd).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return ""
     if state.get("slug") == slug:
@@ -129,9 +223,11 @@ def unfinished(slug: str) -> str:
     start = state.get("mark", 0) + 1
     if start > lines:
         return ""   # everything processed, only an empty tail was cut
+    ref = f"s:{state['slug']}#{start}-{lines}"
+    pending_of(cwd).write_text(ref, encoding="utf-8")
     return (f"The previous session was cut short before /handoff. Its transcript "
-            f"has been swept in; the stretch s:{state['slug']}#{start}-{lines} is "
-            f"unprocessed — run /handoff for it before taking on anything new.")
+            f"has been swept in; the stretch {ref} is unprocessed — run /handoff "
+            f"for it before taking on anything new.")
 
 
 def handoff() -> str:
@@ -141,10 +237,11 @@ def handoff() -> str:
     last line is the mark: the range between two calls defines the stretch
     without a single guess.
     """
+    current = current_of("")
     try:
-        state = json.loads(CURRENT.read_text(encoding="utf-8"))
+        state = json.loads(current.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return "current session is not registered: SessionStart did not run"
+        return "this folder has no registered session: SessionStart did not run here"
 
     origin = Path(state["transcript"]).expanduser()
     if not origin.is_file():
@@ -153,7 +250,8 @@ def handoff() -> str:
     copy_transcripts(state["transcript"], state["slug"])
     lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
     start, state["mark"] = state["mark"] + 1, lines
-    CURRENT.write_text(json.dumps(state), encoding="utf-8")
+    current.write_text(json.dumps(state), encoding="utf-8")
+    pending_of("").unlink(missing_ok=True)
     return f"s:{state['slug']}#{start}-{lines}"
 
 
@@ -196,12 +294,21 @@ def main() -> None:
     today = date.today()
     slug = session_slug(event.get("session_id", ""), today)
 
-    message = unfinished(slug)
-    append_row(slug, today, project_name(event.get("cwd", "")))
-    remember(slug, event.get("transcript_path", ""))
+    cwd = event.get("cwd", "")
+    message = unfinished(slug, cwd)
+    project = project_name(cwd)
+    append_row(slug, today, project)
+    prepare(project)
+    remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
-    if message:
-        print(message)
+
+    notice = crowding(project)
+    pending = pending_of(cwd)
+    if notice and "displace" in notice and not pending.exists():
+        pending.write_text(notice, encoding="utf-8")   # past the limit it blocks
+    for text in (message, notice):
+        if text:
+            print(text)
 
 
 if __name__ == "__main__":
