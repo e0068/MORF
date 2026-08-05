@@ -294,25 +294,37 @@ def unaccounted(path: Path, cwd: Path) -> tuple[list[str], list[str], list[str]]
 
 # ===== What is watched =====
 
-def outside_rules(path: Path, snap: Path) -> int:
-    """Lines that changed since the seal without touching a rule.
+def outside_rules(path: Path, snap: Path, log: Path) -> int:
+    """Lines that changed since the seal without touching a known rule.
 
     This is the snapshot's one job. Drift is read from the log, which knows
     what the file should hold; what the log cannot know is how much else
     moved — and `outside:` in the log is exactly that count. Without this the
     snapshot would store a copy nobody reads and the verb would have no
     producer.
+
+    The filter is membership, not shape. Excluding every list item would drop
+    a reworded prose bullet out of every report at once: the log never claimed
+    it, so it is not `gone`; it was a candidate before and after, so `extra`
+    does not move; and by shape it would be skipped here too. A changed line
+    counts as outside unless it is a rule the log knows, which is also what
+    keeps a changed rule from being counted twice — it is already `gone`.
+
+    A consequence worth expecting: adopting a candidate lowers the next count,
+    because the line becomes a known rule and its changes become drift.
     """
     try:
         was = snap.read_text(encoding="utf-8").splitlines()
         now = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         return 0
+    known = replay(log)[0]
     moved = 0
     for line in difflib.unified_diff(was, now, n=0, lineterm=""):
         if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
             continue
-        if not BULLET_RE.match(line[1:]):
+        bullet = BULLET_RE.match(line[1:])
+        if not (bullet and bullet.group("text") in known):
             moved += 1
     return moved
 
@@ -525,8 +537,8 @@ def diff(cwd: Path, only: str = "") -> int:
         if only and Path(only).expanduser().resolve() != target:
             continue
         gone, extra, broken = unaccounted(target, cwd)
-        snap_here, _ = pair(scope, relative)
-        if not gone and not extra and not broken and not outside_rules(target, snap_here):
+        snap_here, log_here = pair(scope, relative)
+        if not gone and not extra and not broken and not outside_rules(target, snap_here, log_here):
             continue
         shown += 1
         print(f"\n{target}")
@@ -536,8 +548,8 @@ def diff(cwd: Path, only: str = "") -> int:
             print(f"  ? {item}   (the log does not know this one)")
         for entry in broken:
             print(f"  ! {entry}   (this log entry does not read back)")
-        snap, _ = pair(scope, relative)
-        moved = outside_rules(target, snap)
+        snap, log = pair(scope, relative)
+        moved = outside_rules(target, snap, log)
         if moved:
             print(f"  · {moved} line(s) changed outside the rules")
     if not shown:
