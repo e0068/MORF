@@ -133,6 +133,41 @@ def levels() -> list[str]:
         return DEFAULT_LEVELS
 
 
+def crowding(project: str) -> str:
+    """Says whether the inbox is owed a consolidation, and how badly.
+
+    The cadence is written in levels.md and nothing ever checked it, so the
+    levels that are actually read stayed empty while L0 filled: an empty
+    upper level looks like a correct state, not a starved one. Past the
+    limit the loss becomes real — further lines displace earlier ones — so
+    that is where the notice stops being a notice.
+    """
+    if project in ("", "—"):
+        return ""
+    inbox = MEMORY / project / f"{levels()[0]}.md"
+    try:
+        held = sum(1 for line in inbox.read_text(encoding="utf-8").splitlines()
+                   if line.startswith("- "))
+    except OSError:
+        return ""
+    if not held:
+        return ""
+    limit = limits()[0]
+    if held >= limit:
+        return (f"{project}: the inbox holds {held} lines against a limit of {limit}. "
+                f"Further observations displace earlier ones. Consolidate before working.")
+    return (f"{project}: {held} of {limit} lines in the inbox, none consolidated. "
+            f"The levels that are read stay empty until they are filled from it.")
+
+
+def limits() -> list[int]:
+    """Line limits per level, from the same config."""
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))["limits"]
+    except (OSError, ValueError, KeyError):
+        return [40, 30, 25, 20]
+
+
 def prepare(project: str) -> int:
     """Creates the project's shelves the first time the project is seen.
 
@@ -266,8 +301,14 @@ def main() -> None:
     prepare(project)
     remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
-    if message:
-        print(message)
+
+    notice = crowding(project)
+    pending = pending_of(cwd)
+    if notice and "displace" in notice and not pending.exists():
+        pending.write_text(notice, encoding="utf-8")   # past the limit it blocks
+    for text in (message, notice):
+        if text:
+            print(text)
 
 
 if __name__ == "__main__":

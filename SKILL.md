@@ -28,7 +28,8 @@ the reasoning is in `MORF/Docs/`.
    line limits. It is generated from `Scripts/config.json`; never edit it.
 
 4. If the first level changed or is approaching its limit, consolidate
-   before starting work:
+   before starting work. The session start says how full the inbox is and
+   refuses work once it is at the limit, where new lines displace old ones:
    - recompute scores: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/score-memory.py`
    - work top down: fill `L2` from `L1` first, then `L1` from `L0`.
      Bottom up a line would climb two levels in one pass.
