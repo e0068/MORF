@@ -58,7 +58,9 @@ Setting `cleanupPeriodDays: 0` is not an option: the documentation calls it "nev
 
 **Why this way.** A debt is the agent's, so it is put in front of the agent — on [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit), whose stdout reaches the context, on **every** turn until the debt is gone. The pressure is not in blocking once but in arriving every time: a notice said once at session start is exactly what this replaces.
 
-**Why not otherwise.** An earlier version exited 2 instead, which discards the prompt. That made a person retype what they had just written to pay for what an agent had forgotten, and the owner's part in this system is to approve a hook, nothing else. Enforcement that bills the human is worse than none: it teaches them to remove the hook.
+Once is not enough, though: a turn told at its start still ends however it likes. [`Stop`](https://code.claude.com/docs/en/hooks#stop) is the one point where the answer is written and the debt is still there, so it sends the turn back — the work gets done, or the answer says it was left. `stop_hook_active` marks a turn already returned once, because blocking twice is not pressure but a hang.
+
+**Why not otherwise.** An earlier version exited 2 on the prompt instead, which discards it. That made a person retype what they had just written to pay for what an agent had forgotten, and the owner's part in this system is to approve a hook, nothing else. Enforcement that bills the human is worse than none: it teaches them to remove the hook.
 
 ---
 
