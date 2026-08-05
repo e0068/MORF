@@ -48,6 +48,11 @@ Two decisions of this revision were made and then undone — both reversals stay
 
 | What | Content |
 |---|---|
+| how watching begins | the document described the snapshot-and-log pair and said nothing about who creates it or when. The layer could therefore never start on its own: a rule written into a file stayed invisible to it, and nobody would notice the line being deleted. The three steps are now named, and named as the agent's work; one decision stays the owner's — which of the items already standing there are rules |
+| refusing to take a file under watch twice | it overwrote the snapshot and silently sealed a foreign change — exactly what must be a deliberate act with a command of its own |
+
+| What | Content |
+|---|---|
 | the `MORF/Rules` layout in "Structure" and the "Watching" section | addresses and the MORF folder are described together, because they are one subject — where a rule lies; watching is separate: drift, the refusal to edit over someone else's change, the log |
 | the observation counters on a rule | `hit · use · miss · inverse`, `S` and `R` from `score-memory.py`, one source list. One counting language for the whole system |
 | exit thresholds as settings | `miss ≥ rulesOutByMiss` or `inverse ≥ rulesOutByInverse`, a miss and a flip carry their own coefficients: they are different events, and the second weighs more. There is no intermediate stage — a narrowed rule comes back by ordinary promotion |

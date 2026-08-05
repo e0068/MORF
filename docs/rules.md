@@ -103,6 +103,12 @@ MORF/Rules/
 
 Watched files are the ones MORF wrote to itself, plus those taken by hand; the presence of a snapshot is the mark of watching. The register is one for everything: `map.md`, a section per file, a line per rule — see "Accounting".
 
+Watching begins at the moment a rule is put there, and the agent begins it, not you: write the text, take the file under watch if it is not already, enter the rule in the register and in the log. All three steps are its work. Your role in this layer is the one you have in the whole system: to approve a hook.
+
+One decision is still yours, because the machine cannot make it. Items already standing in a watched file are shown as candidates: an added rule and added prose cannot be told apart inside a file outside the contour. Which of them are rules is yours to say, and the agent enters them.
+
+Taking a file under watch a second time is refused. It would overwrite the snapshot and seal a foreign change nobody has accounted for — and sealing must be a deliberate act, with a command of its own.
+
 **Why this way.** The top level of the folder is the root a file hangs off, not its reach: reach is derived from the address and written in the header of the `map.md` section. Otherwise a skill from `~/.claude/skills/` would land in a folder named "everywhere", though it loads the most rarely of all. `.claude/rules/` is called `Paths` — `Rules/<project>/Rules` would repeat the name and stop reading as a phrase.
 
 Every snapshot carries the `.snap` suffix, though it exposes only one case: `Rules/<project>/CLAUDE.md` is a valid `CLAUDE.md` for any run with cwd inside that folder, and it would be picked up as the real one. The naming rule must not depend on which of the five addresses a file came from, so both ends of the pair are marked.
