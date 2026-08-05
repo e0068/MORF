@@ -20,7 +20,9 @@ tags: [morf, infrastructure]
 
 `SessionStart` adds a row to `MORF/Memory/sessions.md` and remembers the session state. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
 
-A copy into the archive is made on every `/morf:handoff`. **All** files written into the project directory during the session are copied: subagents keep their own, and which ones is not known in advance.
+A copy into the archive is made on every `/morf:handoff`: the session transcript, and the subagent files kept in the folder Claude Code names after the session.
+
+The files lying *beside* that folder are other sessions' transcripts, not this one's children. Collecting by modification time instead — which is what an earlier version did, meaning to catch the subagents — gathered peers, stored every session twice and never copied a subagent at all.
 
 Copied whole, with all structure: turns, agents' reasoning, tool calls.
 
@@ -32,7 +34,7 @@ After that Claude Code's own store is needed only for sweeping in sessions that 
 
 **The archive does not expire.** A reference appears together with the index row, that is, with the system already running, and a copy is never deleted — "older than the retention period" cannot happen here.
 
-A missing file means the session was cut short before the copy. `SessionStart` writes the state, `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
+A missing file means the session was cut short before the copy. `SessionStart` writes the state — into `.state/<working folder>.json`, one slot per folder rather than one for everything, because the command that reads it knows no session id and only the folder it runs in — and `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
 
 A copy is not enough, though: a cut-short session also skipped `/morf:handoff`, so no observations were made from that stretch. That cannot be finished mechanically. So `SessionStart` works out how far the previous processing got and **tells the agent the unprocessed stretch**: its stdout reaches the session context. The working order says to start with `/morf:handoff` on that reference.
 
@@ -45,6 +47,20 @@ This is the only place where enforcement is introduced immediately rather than t
 **Why not otherwise.** Storing transcripts as notes would put them on the map, and the agent would start spending context on reading old context.
 
 Setting `cleanupPeriodDays: 0` is not an option: the documentation calls it "never clean up", but a known bug turns off transcript writing altogether.
+
+---
+
+## What the memory owes
+
+**How it works.** Collecting was the only stage that ran by itself. Consolidation, the audit and the facts map each waited for someone to read the working order and recall the cadence, and for the whole life of this memory not one of them ever ran. Nothing about that looked wrong: an empty upper level is a correct state, an audit that has never run reports `last: none`, and a map with no articles is a map with no articles.
+
+`due.py` derives every obligation from what is already on disk, so nothing new is bookkept. A level is owed material when the level below carries a session it has never seen and enough of the project's sessions have passed since. The audit counts sessions against the id in `audit.md`. The map is stale when an article is newer than it. `SessionStart` prints them all.
+
+**Why this way.** An obligation is spoken every session, and stops being a notice once it has been passed over twice its own period. At that point [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit) refuses the prompt, because by then the advisory has demonstrably lost — a line of text competes with whatever was just asked for, and loses every time. The refusal hands the prompt back to be resent, and anything about the handoff passes through, or there would be no way out.
+
+A full inbox blocks on its own without waiting for neglect: past the limit new observations displace earlier ones, and that loss is silent.
+
+**Why not otherwise.** Blocking every obligation at once would make a session unopenable on the day the memory falls behind, which teaches its owner to remove the hook rather than to consolidate.
 
 ---
 

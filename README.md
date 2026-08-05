@@ -37,7 +37,8 @@ Through the marketplace, if you prefer:
 
 | Part | What it does |
 |---|---|
-| hook `SessionStart` | registers the session, sweeps in cut-short transcripts, reports the unprocessed stretch |
+| hook `SessionStart` | registers the session, sweeps in cut-short transcripts, gives the project its shelves, says what the memory owes |
+| hook `UserPromptSubmit` | refuses work while a stretch is unprocessed or the inbox is full |
 | hook `PreToolUse` | keeps tools out of the conversation archive |
 | `/morf:handoff` | reconciliation at the end of a piece of work: transcript copy, counters, new observations |
 | `/morf:why` | from a line back to the conversation it came from |
