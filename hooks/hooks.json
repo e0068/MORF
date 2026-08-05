@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/gate-handoff.py",
+            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --prompt",
             "timeout": 10
           }
         ]

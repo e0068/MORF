@@ -29,3 +29,14 @@ def memory() -> Path:
 
 def facts() -> Path:
     return home() / "Facts"
+
+
+def state() -> Path:
+    return memory() / ".state"
+
+
+def slot(cwd: str) -> str:
+    """A file name for the working folder: the only key both the hook and the
+    command know, since a command is given no session id."""
+    path = Path(cwd).expanduser() if cwd else Path.cwd()
+    return str(path).strip("/").replace("/", "-") or "root"

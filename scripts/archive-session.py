@@ -308,17 +308,7 @@ def main() -> None:
     remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
 
-    notice = crowding(project)
-    obligations = due.owed(project)
-    blocking = [text for text, hard in obligations if hard]
-    if notice and "displace" in notice:
-        blocking.insert(0, notice)
-
-    pending = pending_of(cwd)
-    if blocking and not pending.exists():
-        pending.write_text(" · ".join(blocking), encoding="utf-8")
-
-    for text in (message, notice, *(text for text, _ in obligations)):
+    for text in (message, crowding(project), *due.owed(project, cwd)):
         if text:
             print(text)
 

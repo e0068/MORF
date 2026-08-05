@@ -43,12 +43,13 @@ the reasoning is in `MORF/Docs/`.
    - promote a line one level up, displacing the weakest by `S`
    - report what changed in a single table
 
-5. The session start counts what is owed and says it: a consolidation the
-   levels are waiting for, an audit past its ten sessions, a facts map older
-   than the articles in it. Nothing here is yours to remember — do the work
-   it names before starting, and never ask me whether to: I am not the timer.
-   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --all` says it for every
-   project at once.
+5. What the memory owes arrives on **every** turn, not once at the start: an
+   unread stretch, a consolidation the levels wait for, an audit past its ten
+   sessions, a facts map older than its articles. All of it is yours to
+   discharge and none of it is mine to be asked about — I am not the timer,
+   and I am not the one who forgot. Never turn a debt of yours into a
+   question for me. `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/due.py --all`
+   says it for every project at once.
 
 ## Writing
 

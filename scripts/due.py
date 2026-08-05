@@ -6,6 +6,11 @@ and the audit each waited for someone to read the skill and remember, and
 none of them ever ran: an empty upper level looks like a correct state, so
 nothing about the silence was alarming.
 
+The owner does nothing about any of it. A debt is the agent's to discharge,
+so it is put in front of the agent on every turn — not raised as a refusal
+of the owner's prompt, which only made a person retype what they had just
+written to pay for what an agent had forgotten.
+
 Every condition here is already in the data, so nothing new is bookkept.
 A level is owed material when the level below it carries a session the
 level above has never seen, and enough of this project's sessions have
@@ -13,6 +18,7 @@ passed since. The audit counts sessions since the id in `audit.md`.
 
     python3 due.py            what the current folder's project owes
     python3 due.py --all      every project
+    python3 due.py --prompt   the same, addressed to the agent, on every turn
 
 No dependencies beyond the standard library.
 """
@@ -33,7 +39,6 @@ FACTS = morf.facts()
 INDEX = MEMORY / "INDEX.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 AUDIT_AFTER = 10                      # sessions, per the skill
-NEGLECT = 2                           # ignored this many times over, it stops being a notice
 
 SOURCE_RE = re.compile(r"s:(\d{6}-\w+)")
 ROW_RE = re.compile(r"^\|\s*s:(?P<id>[\w-]+)\s*\|[^|]*\|\s*(?P<project>[^|]*?)\s*\|")
@@ -123,42 +128,56 @@ def is_project(project: str) -> bool:
     return bool(project) and project != "—" and (MEMORY / project / f"{levels[0]}.md").is_file()
 
 
-def owed(project: str) -> list[tuple[str, bool]]:
-    """What this project owes, each with whether it still tolerates waiting.
+def stretch(cwd: str) -> str:
+    """A piece of conversation archived and never turned into observations."""
+    try:
+        ref = (morf.state() / f"{morf.slot(cwd)}.pending").read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+    return f"handoff: the stretch {ref} is archived and unread" if ref else ""
 
-    An obligation is said out loud every session. It stops being a notice
-    once it has been passed over `NEGLECT` times its own period: at that
-    point the advisory has demonstrably lost, which this memory has already
-    written down about itself once.
-    """
+
+def owed(project: str, cwd: str = "") -> list[str]:
+    """Everything this project owes. Nothing here waits on the owner."""
     if not is_project(project):
         return []
-    out = []
-    line = stale_map()
-    if line:
-        out.append((line, False))
-    line = audit(project)
-    if line:
-        waited = elapsed(project, set())
-        match = LAST_RE.search(AUDIT.read_text(encoding="utf-8") if AUDIT.is_file() else "")
-        last = match.group(1) if match else "none"
-        if last not in ("", "none"):
-            waited = elapsed(project, {last})
-        out.append((line, waited >= AUDIT_AFTER * NEGLECT))
-    for line in consolidation(project):
-        out.append((line, False))     # crowding blocks this one, where loss is real
-    return out
+    return [line for line in (stretch(cwd), audit(project), stale_map(),
+                              *consolidation(project)) if line]
 
 
 # ===== Entry =====
 
+def as_instruction() -> None:
+    """Puts the debt in front of the agent, on stdout, and lets the turn run.
+
+    `UserPromptSubmit` stdout reaches the context; exit 2 would discard what
+    the owner typed. The pressure is not in blocking once but in arriving
+    every turn until the debt is gone — a notice said once at session start
+    is what everything here was built to replace.
+    """
+    try:
+        event = json.load(sys.stdin)
+    except (json.JSONDecodeError, ValueError):
+        return
+    cwd = event.get("cwd") or str(Path.cwd())
+    debts = owed(Path(cwd).name, cwd)
+    if not debts:
+        return
+    print("MORF: this project owes work on its memory, and it is yours to do, "
+          "not the owner's to ask for. Discharge it before answering:")
+    for text in debts:
+        print(f"  - {text}")
+
+
 def main() -> None:
+    if "--prompt" in sys.argv:
+        return as_instruction()
     projects = ([p.name for p in sorted(MEMORY.iterdir())
                  if p.is_dir() and p.name not in ("Transcripts", "Scripts", ".state")]
                 if "--all" in sys.argv else [Path.cwd().name])
     for project in projects:
-        for line, hard in owed(project):
-            print(f"{project}: {line}" + ("  [blocking]" if hard else ""))
+        for line in owed(project):
+            print(f"{project}: {line}")
 
 
 if __name__ == "__main__":
