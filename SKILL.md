@@ -61,7 +61,11 @@ the reasoning is in `MORF/Docs/`.
      rewriting one reopens what it had closed. That is what closes the debt,
      the same way a handed-off stretch closes its own: by appearing in the
      memory. An unwritten decision is indistinguishable from work never done.
-   - report what changed in a single table
+   - report what changed in a single table: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/trace.py --show`
+     renders it from disk — a shelf per row, a level per column, each cell
+     `count (+in −out)`. Show that matrix rather than an account of your own;
+     it is the one report you cannot overstate. The same table prints itself on
+     `Stop` whenever a turn moved memory, so after a `/handoff` too.
 
 5. What the memory owes arrives on **every** turn, not once at the start: an
    unread stretch, a consolidation the levels wait for, an audit past its ten
@@ -118,7 +122,7 @@ the reasoning is in `MORF/Docs/`.
 
 - Do not touch `[S= R= t=]` by hand: `score-memory.py` writes them, in
   `MORF/Rules/map.md` as well as in the level files.
-- Do not edit `TAGS.md`, `INDEX.md`, `sessions.md`, `levels.md`: generated.
+- Do not edit `TAGS.md`, `INDEX.md`, `sessions.md`, `levels.md`, `TRACE.md`: generated.
 - In `MORF/Rules` the logs and the counters in `map.md` are written by hand;
   `*.snap.md` is a snapshot the scripts keep, and `[S= R= t=]` in `map.md` is
   written by `score-memory.py`. No log is ever deleted.
