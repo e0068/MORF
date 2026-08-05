@@ -303,28 +303,34 @@ def outside_rules(path: Path, snap: Path, log: Path) -> int:
     snapshot would store a copy nobody reads and the verb would have no
     producer.
 
-    The filter is membership, not shape. Excluding every list item would drop
-    a reworded prose bullet out of every report at once: the log never claimed
-    it, so it is not `gone`; it was a candidate before and after, so `extra`
-    does not move; and by shape it would be skipped here too. A changed line
-    counts as outside unless it is a rule the log knows, which is also what
-    keeps a changed rule from being counted twice — it is already `gone`.
+    The filter is membership, not shape, and it excludes both sides.
 
-    A consequence worth expecting: adopting a candidate lowers the next count,
-    because the line becomes a known rule and its changes become drift.
+    Shape alone would drop a reworded prose bullet out of every report at
+    once: the log never claimed it, so it is not `gone`; it was a candidate
+    before and after, so `extra` does not move; and as a list item it would be
+    skipped here too. So a changed line counts unless it is a bullet the file
+    or the log accounts for elsewhere:
+
+        a rule the log knows      — already reported as `gone`;
+        an item the file now has  — already reported as `extra`.
+
+    Excluding only the first would count the new half of an in-place rule
+    edit, and `outside:` reads "no rule touched" — asserting that about the
+    one line where a rule was touched. What remains counted is what nothing
+    else names: a removed bullet nobody accounted for, and prose.
     """
     try:
         was = snap.read_text(encoding="utf-8").splitlines()
         now = path.read_text(encoding="utf-8").splitlines()
     except OSError:
         return 0
-    known = replay(log)[0]
+    accounted = set(replay(log)[0]) | set(items(path))
     moved = 0
     for line in difflib.unified_diff(was, now, n=0, lineterm=""):
         if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
             continue
         bullet = BULLET_RE.match(line[1:])
-        if not (bullet and bullet.group("text") in known):
+        if not (bullet and bullet.group("text") in accounted):
             moved += 1
     return moved
 
@@ -551,7 +557,7 @@ def diff(cwd: Path, only: str = "") -> int:
         snap, log = pair(scope, relative)
         moved = outside_rules(target, snap, log)
         if moved:
-            print(f"  · {moved} line(s) changed outside the rules")
+            print(f"  · {moved} line(s) changed outside the rules since the last seal")
     if not shown:
         print("Nothing moved.")
     return 0

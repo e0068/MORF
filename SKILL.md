@@ -79,6 +79,11 @@ the reasoning is in `MORF/Docs/`.
 - When a watched file drifts, discharge it in this order: read
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --diff`, write what changed
   into that file's `*.log.md`, then `rules.py --seal <path>`.
+- A `·` line in `--diff` counts what moved in that file without touching a
+  rule, and it is cumulative since the last seal. Discharge it the same way:
+  an `outside: N line(s) changed, no rule touched` entry in the log, then
+  `--seal`. Left alone it only grows, and the next real count is measured
+  against a stale copy.
 - Fact articles live in `MORF/Facts` and nowhere else: the map is built from
   that folder alone, so an article written elsewhere is invisible.
   They are articles about a phenomenon, not one fact per file.
