@@ -107,7 +107,18 @@ Watching begins at the moment a rule is put there, and the agent begins it, not 
 
 **The layer accounts for what it wrote itself, and for nothing else.** Instructions you put in these files are yours: they work as they always did, and this layer will not notice, count or propose them. There are no candidates and no question put to you.
 
-An older rule can still be brought in, but only on your own word: the command exists and nothing will ever suggest it. Its source is the current session, and that marks when MORF started counting rather than where the rule came from — `/why` on it reaches the adoption and no further.
+An older rule can still be brought in, but only on your own word: nothing will ever suggest it.
+
+**How to start accounting for something that was not tracked.** Tell the agent which line in which file, and the rest is its work:
+
+```bash
+python3 MORF/Memory/Scripts/rules.py --track  <file>          # if the file is not watched yet
+python3 MORF/Memory/Scripts/rules.py --adopt  <file> "<the rule text>"
+```
+
+The text must match an item in the file exactly, or the command refuses: it does not edit a file it does not own, it starts accounting for what already stands there. After it the register holds a line with zero counters, the log holds an `added:` entry, and from that moment the rule is watched — losing it or rewording it becomes drift.
+
+The price is named: the source is the current session, and that marks when MORF started counting rather than where the rule came from. `/why` on such a rule reaches the conversation where it was taken in, and no further.
 
 Taking a file under watch a second time is refused. It would overwrite the snapshot and seal a foreign change nobody has accounted for — and sealing must be a deliberate act, with a command of its own.
 

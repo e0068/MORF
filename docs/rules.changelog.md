@@ -48,6 +48,7 @@ Two decisions of this revision were made and then undone — both reversals stay
 
 | What | Content |
 |---|---|
+| how to start accounting for an untracked rule | the document said an older rule could be brought in "on your own word" and named neither the command nor what it does. Both commands are now written out, along with the exact-match requirement and the price: the source is the session of the adoption, not the one the rule came from |
 | how watching begins | the document described the snapshot-and-log pair and said nothing about who creates it or when. The layer could therefore never start on its own: a rule written into a file stayed invisible to it, and nobody would notice the line being deleted. The three steps are now named, and named as the agent's work; one decision stays the owner's — which of the items already standing there are rules |
 | the snapshot given its job | the document promised it would "notice drift", and drift is read from the log: nobody read the copy's content, and the `outside:` verb had no producer. The snapshot now counts the lines that moved outside the rules — the one thing the log cannot know |
 | taking a file under watch twice | the snapshot is left alone: rewriting it would push its mtime above the log's, and `--seal` in a folder with no registered session compares exactly those — a re-track would make the next seal refuse. The command is idempotent and exits zero: the agent is told to track a file "if it is not watched yet", nothing else answers that question, and a check must not fail on the desired state |
