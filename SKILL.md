@@ -35,10 +35,14 @@ the reasoning is in `MORF/Docs/`.
      Bottom up a line would climb two levels in one pass.
    - group related lines into clusters, then try to state an imperative:
 
-     stated, enough weight, already tried against what happened -> rule
-     stated, weight too low                                     -> leave it
-     cannot be stated                                           -> a fact article
-     weight decayed                                             -> `dropped.md`
+     stated, S >= rulesInScore, use/hit >= rulesIn -> rule
+     stated, either threshold not met              -> leave it
+     cannot be stated                              -> a fact article
+     weight decayed                                -> `dropped.md`
+
+     The thresholds are in `Scripts/config.json`. A rule also needs at least
+     one `hit`: `hit` is the denominator, so a line that changed decisions but
+     was never confirmed waits.
 
    - promote a line one level up, displacing the weakest by `S`
    - report what changed in a single table
@@ -59,6 +63,12 @@ the reasoning is in `MORF/Docs/`.
 - An imperative produced by prefixing "do not" to an observation is a
   restatement, not a rule. A real rule adds what the observation lacks:
   what to do instead, under which condition.
+- A rule's text goes to one of the five addresses in `MORF/Docs/rules.md`;
+  its accounting goes to `MORF/Rules/map.md`, a line per rule in the shape of
+  a memory line. Nothing of ours is written into the file outside the contour.
+- When a watched file drifts, discharge it in this order: read
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --diff`, write what changed
+  into that file's `*.log.md`, then `rules.py --seal <path>`.
 - Fact articles live in `MORF/Facts` and nowhere else: the map is built from
   that folder alone, so an article written elsewhere is invisible.
   They are articles about a phenomenon, not one fact per file.
@@ -74,8 +84,12 @@ the reasoning is in `MORF/Docs/`.
 
 ## Never
 
-- Do not touch `[S= R= t=]` by hand: `score-memory.py` writes them.
+- Do not touch `[S= R= t=]` by hand: `score-memory.py` writes them, in
+  `MORF/Rules/map.md` as well as in the level files.
 - Do not edit `TAGS.md`, `INDEX.md`, `sessions.md`, `levels.md`: generated.
+- In `MORF/Rules` the logs and the counters in `map.md` are written by hand;
+  `*.snap.md` is a snapshot the scripts keep, and `[S= R= t=]` in `map.md` is
+  written by `score-memory.py`. No log is ever deleted.
 - Never write to or delete from `MORF/Memory/Transcripts`. It is filled by
   copying from Claude Code's own history and by nothing else. A hook blocks it.
 - Delete nothing else either. Displaced lines go to `dropped.md` with sources.

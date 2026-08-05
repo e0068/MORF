@@ -291,6 +291,22 @@ def sweep() -> int:
 
 # ===== Entry point =====
 
+def mark_foreign_drift(slug: str, cwd: str) -> None:
+    """Draws the line the rule guard fires on: what already drifted at start.
+
+    Guarded by the slug the way `unfinished()` is, because this file runs its
+    whole `main()` on `resume` and `compact` as well — an unguarded call would
+    record the middle of a session as its beginning, and the agent's own edit
+    would come back to it as someone else's. A broken sibling import must not
+    take the session start down with it.
+    """
+    try:
+        import rules
+        rules.at_start(cwd, slug)
+    except Exception:                      # noqa: BLE001
+        pass
+
+
 def main() -> None:
     if "--handoff" in sys.argv:
         print(handoff())
@@ -302,6 +318,7 @@ def main() -> None:
 
     cwd = event.get("cwd", "")
     message = unfinished(slug, cwd)
+    mark_foreign_drift(slug, cwd)          # before remember(): it overwrites the slug
     project = project_name(cwd)
     append_row(slug, today, project)
     prepare(project)

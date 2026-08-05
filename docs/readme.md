@@ -62,6 +62,16 @@ On the canvas the colour of an arrow marks the executor. The distinction matters
 
 Green and blue are **the same mechanism in different context**. Wording benefits from the agent being inside the task and seeing details; the decision suffers from it — from inside a fresh successful case the weight of evidence cannot be judged, because that case weighs more than the rest simply by being in view.
 
+## Values
+
+Three, and every "why this way" in these notes reduces to one of them.
+
+**Evolvability.** The system must survive its own mistakes without losing what it accumulated. So nothing here is deleted: what is displaced goes to `dropped` with its sources, a refutation narrows a rule rather than cancelling it, a withdrawn rule returns to memory with its history, and the transitions are recorded in `moves`. A decision you cannot learn has already failed will be made again in six months.
+
+**Speed.** Everything that loads by itself costs tokens in every session; everything hanging on a hook costs time on every turn; and every entity created costs the consulting it will take. Hence the hard level limits, the transition history in a `moves` comment that is stripped before the context, facts that nobody loads until they are searched for, scripts without a single dependency — and the refusal to create a second mechanism where an existing one copes: a repeat raises a counter rather than breeding a record, a skill is not an entity but an address on the reach axis, there is no *against* bundle because `miss` and `inverse` are already counted.
+
+**Transparency and reliability.** One point of truth, and nothing breaks silently. Hence **encapsulation**: MORF writes only inside its own directory, and carries outward exactly one thing — the rule's text, without which it would not load. Hence a source on every line, an archive that never expires, `/why` down to the raw conversation, obligations derived from what already lies on disk — and the refusal of a duplicate in any form: justifying a rule in prose would be a third copy, a second file holding the project's path would go stale on the first move, a separate transition journal would have to be tied to the records. Hence two further refusals: not to count what cannot be checked, and not to decide for you where there is no right answer in advance — the scale unit, the language, adopting an item all stay settings rather than the author's decisions. Names belong here too: a path and a title must hold their meaning, because a name that stops holding it hides what the thing is.
+
 ## Where to start
 
 **[[model|The canvas]]** — the whole construction: three phases, the foundation, every transition. Start there: the notes explain the details but do not give the overall picture.
@@ -78,7 +88,7 @@ The third exit from memory, without which the system would discard what is true.
 
 ### [[rules]]
 
-Two independent axes — reach with frequency, and hardness — and why merging them was a mistake. Addresses from `~/.claude/CLAUDE.md` to an agent definition, and why a skill is a set of rarely needed rules. Two bundles of sources, for and against, both alive: an argument is not blocked, it has an entry price. The track record, `E` as risk rather than damage. What to do about rules in areas you cannot judge yourself.
+One entrance and one exit, both through memory: a rule is derived from a mature observation and returns to observations when it errs. Addresses from `~/.claude/CLAUDE.md` to an agent definition, and why a skill is a set of rarely needed rules. The same counters an observation carries, kept in MORF rather than in the file the rule lies in — and the snapshot and log that notice when that file changes without us.
 
 ### [[foundation]]
 

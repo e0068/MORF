@@ -48,7 +48,8 @@ LINE_RE = re.compile(
     r"^(?P<head>- (?:↑ )?)"
     r"(?:hit:(?P<hit>\d+) ?)?(?:use:(?P<use>\d+) ?)?"
     r"(?:miss:(?P<miss>\d+) ?)?(?:inverse:(?P<inverse>\d+) ?)?"
-    r"(?: \[[^\]]*\])?"
+    r"(?: ?\[S=[^\]]*\])?"     # пробел уже съеден счётчиком выше; якорь на `S=`,
+                               # иначе группа съест текст, начинающийся с `[[ссылки]]`
     r"(?P<text>.+?)"
     r"\((?P<sources>s:[^)]*)\)\s*$"
 )
@@ -174,8 +175,8 @@ def rewrite_line(line: str, scale: dict[str, int]) -> str:
     retention, urgency = scores(*(weights[key] for key in keys))
     marks = " ".join(f"{key}:{counts[key]}" for key in keys if counts[key] or key in ("hit", "use"))
     return (
-        f"{match.group('head')}{marks} [S={retention} R={urgency} t={tempo(event_ages)}]"
-        f"{match.group('text')}({match.group('sources')})"
+        f"{match.group('head')}{marks} [S={retention} R={urgency} t={tempo(event_ages)}] "
+        f"{match.group('text').lstrip()}({match.group('sources')})"
     )
 
 

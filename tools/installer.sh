@@ -258,7 +258,7 @@ rm -rf "$SKILLS_DIR/docs" "$SKILLS_DIR/assets"
 # ===== The MORF folder =====
 
 MEMORY="$PLACE/MORF/Memory"
-mkdir -p "$MEMORY/Scripts" "$MEMORY/Transcripts" "$MEMORY/$PROJECT" "$PLACE/MORF/Facts" "$PLACE/MORF/Docs"
+mkdir -p "$MEMORY/Scripts" "$MEMORY/Transcripts" "$MEMORY/$PROJECT" "$PLACE/MORF/Facts" "$PLACE/MORF/Docs" "$PLACE/MORF/Rules"
 
 CHANGED=0
 place() {  # source, target: our files are updated, edited ones are kept alongside

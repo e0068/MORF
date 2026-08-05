@@ -13,7 +13,10 @@ Reconcile what happened with what the system predicted.
 
    `inverse` also creates a new line: the opposite is itself unexpected.
    A refutation matters more than a new finding — never skip it for brevity.
-   If a rule received an `inverse`, tell me at once: it is suspended now.
+   If a rule received a `miss` or an `inverse`, it leaves the rule layer in
+   this same session: its counters go up in `MORF/Rules/map.md`, the move is
+   written into that file's `*.log.md` as `returned:`, and the line goes back
+   to `L0` with its counters, sources and move history. Tell me at once.
 
 3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
