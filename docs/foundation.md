@@ -16,9 +16,9 @@ tags: [morf, infrastructure]
 
 ## The conversation archive
 
-**How it works.** One hook, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart).
+**How it works.** Two hooks, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart) and [`SessionEnd`](https://code.claude.com/docs/en/hooks#sessionend).
 
-`SessionStart` adds a row to `MORF/Memory/sessions.md` and remembers the session state. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
+`SessionStart` adds a row to `MORF/Memory/sessions.md` and registers the session. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
 
 A copy into the archive is made on every `/morf:handoff`: the session transcript, and the subagent files kept in the folder Claude Code names after the session.
 
@@ -34,9 +34,15 @@ After that Claude Code's own store is needed only for sweeping in sessions that 
 
 **The archive does not expire.** A reference appears together with the index row, that is, with the system already running, and a copy is never deleted — "older than the retention period" cannot happen here.
 
-A missing file means the session was cut short before the copy. `SessionStart` writes the state — into `.state/<working folder>.json`, one slot per folder rather than one for everything, because the command that reads it knows no session id and only the folder it runs in — and `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
+A missing file means the session was cut short before the copy. `SessionStart` writes the state — into `.state/<working folder>.json` — and `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
 
-A copy is not enough, though: a cut-short session also skipped `/morf:handoff`, so no observations were made from that stretch. That cannot be finished mechanically. So `SessionStart` works out how far the previous processing got and **tells the agent the unprocessed stretch**: its stdout reaches the session context. The working order says to start with `/morf:handoff` on that reference.
+The file is named after the folder because that is the only key `/morf:handoff` is given — a command is told no session id. What it holds, though, is **an index: every session that registered in that folder, each with its own transcript and its own mark**. A single record per folder made the folder an identity, and it is not one. Whichever session started last owned the slot: `/morf:handoff` answered another session's reference, a session still running in a second window was reported as cut short, and a resume wrote the mark of a stretch already handed off back to zero — the whole conversation came back as an unread debt from line 1, its observations already in the memory. A session is identified by the four characters of its id, so a resume past midnight is still the same session and not a second one.
+
+A copy is not enough, though: a session that ends without `/morf:handoff` leaves a stretch nothing was made of. That cannot be finished mechanically. So `SessionStart` works out how far each ended session of this folder got and **tells the agent the unprocessed stretches**: its stdout reaches the session context. The working order says to start with `/morf:handoff` on that reference.
+
+Ended, not merely other. `SessionEnd` says so outright, but the case worth sweeping — window closed, process killed, machine shut down — is exactly the one that hook never sees, so a transcript left untouched for two hours counts as over too: Claude Code appends to it on every turn, and silence that long is not a session thinking.
+
+**The memory is the evidence, the marker is only bookkeeping.** A stretch written up names itself as its source, so a debt is dropped for whatever the memory already cites — across every project, since a session run in a worktree is a project of its own by folder name while its observations are written onto the shelves of the project it was work on. Bookkeeping is what went wrong here twice; what a line says about where it came from cannot be wrong in the same way.
 
 **Nothing but copying writes into the archive.** It is filled by exactly one path — from Claude Code's history, by a hook rather than a tool. So any tool call touching `Transcripts` is either a mistake or an attempt to erase evidence, and telling them apart is pointless: there are no legitimate cases.
 

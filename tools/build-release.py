@@ -29,8 +29,9 @@ TARGET = ROOT / "dist" / "Install-MORF.command"
 MARKER = "__PAYLOAD__"
 # `.claude` holds the worktrees of in-flight branches, and nothing tracked:
 # a build run from the main checkout was packing every branch's copy of the
-# plugin into the payload — 107 files where there are 37.
-SKIP = {".git", ".claude", ".DS_Store", "dist", "tools", "__pycache__"}
+# plugin into the payload — 107 files where there are 37. `tests` goes the way
+# of `tools`: what gets installed is the plugin, not the means of checking it.
+SKIP = {".git", ".claude", ".DS_Store", "dist", "tools", "tests", "__pycache__"}
 WIDTH = 100
 
 

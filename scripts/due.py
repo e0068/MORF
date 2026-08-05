@@ -40,8 +40,10 @@ FACTS = morf.facts()
 INDEX = MEMORY / "INDEX.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 AUDIT_AFTER = 10                      # sessions, per the skill
+NOT_PROJECTS = ("Transcripts", "Scripts", ".state")
 
 SOURCE_RE = re.compile(r"s:(\d{6}-\w+)")
+STRETCH_RE = re.compile(r"s:(\d{6}-\w+)#(\d+)-(\d+)")
 ROW_RE = re.compile(r"^\|\s*s:(?P<id>[\w-]+)\s*\|[^|]*\|\s*(?P<project>[^|]*?)\s*\|")
 LAST_RE = re.compile(r"^last:\s*(\S+)", re.MULTILINE)
 
@@ -156,13 +158,75 @@ def is_project(project: str) -> bool:
     return bool(project) and project != "—" and (MEMORY / project / f"{levels[0]}.md").is_file()
 
 
-def stretch(cwd: str) -> str:
-    """A piece of conversation archived and never turned into observations."""
+def pending(cwd: str) -> list[str]:
+    """Stretches this folder has archived and not yet turned into observations.
+
+    One per session, from the folder's index. A `.pending` file is what an
+    earlier version wrote — one per folder, so a second dead session's stretch
+    overwrote the first's. Those are still read, and clear the way any stretch
+    now clears: by being handed off, which puts them in the memory as sources.
+    """
+    refs = []
     try:
-        ref = (morf.state() / f"{morf.slot(cwd)}.pending").read_text(encoding="utf-8").strip()
+        state = json.loads((morf.state() / f"{morf.slot(cwd)}.json").read_text(encoding="utf-8"))
+        refs += [record.get("pending") for record in (state.get("sessions") or {}).values()
+                 if record.get("pending")]
+    except (OSError, ValueError, AttributeError):
+        pass
+    try:
+        legacy = (morf.state() / f"{morf.slot(cwd)}.pending").read_text(encoding="utf-8").strip()
     except OSError:
+        legacy = ""
+    if legacy and legacy not in refs:
+        refs.append(legacy)
+    return refs
+
+
+def read_up_to() -> dict[str, int]:
+    """The last line of each session the memory already cites as a source.
+
+    A stretch written up as an observation names itself as the source, so the
+    memory is the record of what was read — evidence, where a marker is only
+    bookkeeping, and bookkeeping is what went wrong. Whatever the marker says,
+    lines already accounted for are not owed again.
+
+    Every project is read, not the one being asked about: a session run in a
+    worktree is a project of its own by folder name, while the observations it
+    produced are written onto the shelves of the project it was work on.
+    """
+    highest: dict[str, int] = {}
+    stems = config("levels", ["L0", "L1", "L2", "L3"]) + ["dropped"]
+    for folder in sorted(MEMORY.iterdir()) if MEMORY.is_dir() else []:
+        if not folder.is_dir() or folder.name in NOT_PROJECTS:
+            continue
+        for stem in stems:
+            try:
+                text = (folder / f"{stem}.md").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for slug, _, end in STRETCH_RE.findall(text):
+                highest[slug] = max(highest.get(slug, 0), int(end))
+    return highest
+
+
+def unread(ref: str, covered: dict[str, int]) -> str:
+    """What is left of a stretch once the memory's own sources are subtracted."""
+    match = STRETCH_RE.fullmatch(ref)
+    if not match:
+        return ref              # not a range: nothing to subtract, report it whole
+    slug, start, end = match.group(1), int(match.group(2)), int(match.group(3))
+    done = covered.get(slug, 0)
+    if done >= end:
         return ""
-    return f"handoff: the stretch {ref} is archived and unread" if ref else ""
+    return f"s:{slug}#{max(start, done + 1)}-{end}"
+
+
+def stretch(cwd: str) -> list[str]:
+    """Pieces of conversation archived and never turned into observations."""
+    refs = pending(cwd)
+    covered = read_up_to() if refs else {}   # read only when something is claimed
+    return [f"handoff: the stretch {left} is archived and unread"
+            for left in (unread(ref, covered) for ref in refs) if left]
 
 
 def rules_owed(project: str, cwd: str) -> list[str]:
@@ -184,7 +248,7 @@ def owed(project: str, cwd: str = "") -> list[str]:
     """Everything this project owes. Nothing here waits on the owner."""
     if not is_project(project):
         return []
-    return [line for line in (stretch(cwd), audit(project), stale_map(),
+    return [line for line in (*stretch(cwd), audit(project), stale_map(),
                               *consolidation(project),
                               *rules_owed(project, cwd)) if line]
 
@@ -246,7 +310,7 @@ def main() -> None:
     if "--prompt" in sys.argv:
         return as_instruction()
     projects = ([p.name for p in sorted(MEMORY.iterdir())
-                 if p.is_dir() and p.name not in ("Transcripts", "Scripts", ".state")]
+                 if p.is_dir() and p.name not in NOT_PROJECTS]
                 if "--all" in sys.argv else [Path.cwd().name])
     for project in projects:
         for line in owed(project):
