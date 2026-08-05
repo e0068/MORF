@@ -31,6 +31,8 @@ MEMORY = morf.memory()
 TRANSCRIPTS = MEMORY / "Transcripts"
 SESSIONS = MEMORY / "sessions.md"
 STATE = MEMORY / ".state"
+CONFIG_FILE = Path(__file__).with_name("config.json")
+DEFAULT_LEVELS = ["L0", "L1", "L2", "L3"]
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
 
@@ -119,6 +121,37 @@ def append_row(slug: str, day: date, project: str) -> None:
         return
     with SESSIONS.open("a", encoding="utf-8") as handle:
         handle.write(f"| s:{slug} | {day:%Y-%m-%d} | {project} |  |\n")
+
+
+# ===== Shelves =====
+
+def levels() -> list[str]:
+    """Level names, from the same config score-memory.py reads."""
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))["levels"]
+    except (OSError, ValueError, KeyError):
+        return DEFAULT_LEVELS
+
+
+def prepare(project: str) -> int:
+    """Creates the project's shelves the first time the project is seen.
+
+    Nothing created them before: /handoff wrote an observation into L0 while
+    the levels above it — the ones that are read — did not exist, so the line
+    had nowhere to be promoted to and the gap showed only later. Existing
+    files are never touched, and MORF's own folder gets none.
+    """
+    if project in ("", "—"):
+        return 0
+    made = 0
+    for stem in levels() + ["dropped"]:
+        path = MEMORY / project / f"{stem}.md"
+        if path.exists():
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"---\nname: {project}-{stem}\n---\n\n", encoding="utf-8")
+        made += 1
+    return made
 
 
 # ===== Session state =====
@@ -228,7 +261,9 @@ def main() -> None:
 
     cwd = event.get("cwd", "")
     message = unfinished(slug, cwd)
-    append_row(slug, today, project_name(cwd))
+    project = project_name(cwd)
+    append_row(slug, today, project)
+    prepare(project)
     remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
     if message:
