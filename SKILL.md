@@ -66,6 +66,16 @@ the reasoning is in `MORF/Docs/`.
 - A rule's text goes to one of the five addresses in `MORF/Docs/rules.md`;
   its accounting goes to `MORF/Rules/map.md`, a line per rule in the shape of
   a memory line. Nothing of ours is written into the file outside the contour.
+- Putting a rule into a file is three steps, and the last two are yours to run,
+  never the owner's: write the text, then
+  `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --track <file>` if that file
+  is not watched yet, then `rules.py --adopt <file> "<the rule text>"`, which
+  writes both the register line and the `added:` entry. A rule whose file was
+  never tracked is invisible to the layer: it will not be missed when someone
+  deletes it.
+- Items already standing in a watched file show up as candidates in `--diff`.
+  Which of them are rules is the owner's call, not yours — ask, then run
+  `--adopt` yourself for the ones they name.
 - When a watched file drifts, discharge it in this order: read
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --diff`, write what changed
   into that file's `*.log.md`, then `rules.py --seal <path>`.

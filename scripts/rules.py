@@ -436,6 +436,12 @@ def track(raw: str, cwd: Path) -> int:
         print(f"No such file: {target}")
         return 1
     snap, log = pair(scope, relative)
+    if snap.exists():
+        # Re-tracking would overwrite the snapshot, and with it any drift
+        # nobody has described yet — sealing by accident what `--seal` exists
+        # to make deliberate.
+        print(f"Already watched: {target}. Use --diff to see what moved.")
+        return 1
     snap.parent.mkdir(parents=True, exist_ok=True)
     snap.write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
     if not log.exists():
