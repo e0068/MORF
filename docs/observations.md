@@ -43,6 +43,8 @@ The cost of forgetting — "what happens if I forget this" — is a judgement ca
 
 Mood stopped being a filter because an observation is indicative by nature: turning it into "do not do X" requires a move from fact to decision, and that move happens later. There is nothing to check at intake. What remains is diagnostics: an imperative line means the agent reflected too early.
 
+**The intake trusts that the transcript is independent of memory, and it is not.** A subagent reads `L1`–`L3` back into the session, its words land in the copy `/morf:handoff` reads, and read back they wear the face of a fresh event — an echo about to be recorded as an observation. So before a new line is written the thought is grepped across the levels above `L0`: a match is not something the system did not contain, it is something the system has just said. At most it is a `hit` on the line that already carries it, and only if the situation itself recurred; the echo alone earns nothing. The grep catches the literal repeat — a reworded one still rests on the reconciliation's own judgement, which no string match can stand in for.
+
 ---
 
 ## Levels and limits

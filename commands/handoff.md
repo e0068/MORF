@@ -23,6 +23,13 @@ Reconcile what happened with what the system predicted.
    Write it in the indicative, in the language set in CLAUDE.md.
    An observation is what occurred.
 
+   But first make sure it is unexpected: grep the thought across `L1`, `L2`
+   and `L3`. If memory already holds it, a subagent may have read that line
+   back into the session — read back, its own words look like a fresh event.
+   A match is at most a `hit` on the line that already carries it (step 2),
+   and only if the situation itself recurred; never a second line saying
+   what memory already holds.
+
 4. If a conclusion about how to act formed during the work, do not discard it.
    Record the observation in the indicative, mark it `↑`, and attach the
    proposed rule wording below it, in English.
