@@ -24,6 +24,7 @@ that is not ours.
 No dependencies beyond the standard library.
 """
 
+import difflib
 import json
 import re
 import sys
@@ -293,6 +294,29 @@ def unaccounted(path: Path, cwd: Path) -> tuple[list[str], list[str], list[str]]
 
 # ===== What is watched =====
 
+def outside_rules(path: Path, snap: Path) -> int:
+    """Lines that changed since the seal without touching a rule.
+
+    This is the snapshot's one job. Drift is read from the log, which knows
+    what the file should hold; what the log cannot know is how much else
+    moved — and `outside:` in the log is exactly that count. Without this the
+    snapshot would store a copy nobody reads and the verb would have no
+    producer.
+    """
+    try:
+        was = snap.read_text(encoding="utf-8").splitlines()
+        now = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return 0
+    moved = 0
+    for line in difflib.unified_diff(was, now, n=0, lineterm=""):
+        if line[:1] not in ("+", "-") or line[:3] in ("+++", "---"):
+            continue
+        if not BULLET_RE.match(line[1:]):
+            moved += 1
+    return moved
+
+
 def watched(cwd: Path) -> list[tuple[str, Path]]:
     """Every watched file of this project plus everything under `home`."""
     if not RULES.is_dir():
@@ -436,20 +460,27 @@ def track(raw: str, cwd: Path) -> int:
         print(f"No such file: {target}")
         return 1
     snap, log = pair(scope, relative)
-    if snap.exists():
-        # Re-tracking would overwrite the snapshot, and with it any drift
-        # nobody has described yet — sealing by accident what `--seal` exists
-        # to make deliberate.
-        print(f"Already watched: {target}. Use --diff to see what moved.")
-        return 1
     snap.parent.mkdir(parents=True, exist_ok=True)
-    snap.write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
+    fresh = not snap.exists()
+    if not fresh:
+        # Idempotent on purpose: the skill tells the agent to track a file if
+        # it is not watched yet, and nothing answers "is it watched" — so this
+        # is the check, and a check must not fail on the desired state.
+        #
+        # The snapshot is left alone. Rewriting it would move its mtime above
+        # the log's, and `--seal` in a folder with no registered session falls
+        # back to exactly that comparison: a re-track would make the next seal
+        # refuse.
+        print(f"Already watched: {target}. Use --diff to see what moved.")
+    else:
+        snap.write_text(target.read_text(encoding="utf-8"), encoding="utf-8")
     if not log.exists():
         log.write_text(f"---\nname: {scope}-{relative.name.replace('.snap.md', '')}-log\n"
                        f"address: {target}\n---\n", encoding="utf-8")
     map_add_section(section(scope, relative, cwd))
-    print(f"Watching {target}. Its log knows no rules yet: every item shows as a "
-          f"candidate until --adopt takes it.")
+    if fresh:
+        print(f"Watching {target}. Its log knows no rules yet: every item shows as a "
+              f"candidate until --adopt takes it.")
     return 0
 
 
@@ -494,7 +525,8 @@ def diff(cwd: Path, only: str = "") -> int:
         if only and Path(only).expanduser().resolve() != target:
             continue
         gone, extra, broken = unaccounted(target, cwd)
-        if not gone and not extra and not broken:
+        snap_here, _ = pair(scope, relative)
+        if not gone and not extra and not broken and not outside_rules(target, snap_here):
             continue
         shown += 1
         print(f"\n{target}")
@@ -504,6 +536,10 @@ def diff(cwd: Path, only: str = "") -> int:
             print(f"  ? {item}   (the log does not know this one)")
         for entry in broken:
             print(f"  ! {entry}   (this log entry does not read back)")
+        snap, _ = pair(scope, relative)
+        moved = outside_rules(target, snap)
+        if moved:
+            print(f"  · {moved} line(s) changed outside the rules")
     if not shown:
         print("Nothing moved.")
     return 0

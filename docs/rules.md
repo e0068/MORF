@@ -113,7 +113,7 @@ Taking a file under watch a second time is refused. It would overwrite the snaps
 
 Every snapshot carries the `.snap` suffix, though it exposes only one case: `Rules/<project>/CLAUDE.md` is a valid `CLAUDE.md` for any run with cwd inside that folder, and it would be picked up as the real one. The naming rule must not depend on which of the five addresses a file came from, so both ends of the pair are marked.
 
-**Why not otherwise.** A version per edit is git inside memory: the folder grows along with every typo. History lives in the log, where it has verbs and sources; a snapshot is needed for exactly one thing — to notice drift. Nor is the project's path kept on disk: the root is cwd, and a second source of truth about where the project lies goes stale on the first move.
+**Why not otherwise.** A version per edit is git inside memory: the folder grows along with every typo. History lives in the log, where it has verbs and sources. The snapshot is left with one job the log cannot do: drift is read from the log, because the log knows what the file should hold — but how much else moved in the file is known only to the previous copy. That is the count in an `outside:` entry. Nor is the project's path kept on disk: the root is cwd, and a second source of truth about where the project lies goes stale on the first move.
 
 ### Accounting
 
