@@ -17,9 +17,10 @@ the reasoning is in `MORF/Docs/`.
 1. If the session start reported an unfinished stretch from a previous
    session, run `/handoff` for that stretch first, using the reference
    it gave you. The transcript is archived, but nobody turned it into
-   observations yet. This one is enforced rather than advised: until the
-   stretch is handed off, `gate-handoff.py` refuses every prompt that is not
-   about the handoff itself, and hands the refused text back to be resent.
+   observations yet. This is a debt, not an advisory: `due.py` puts it in
+   front of you on every turn until the stretch is handed off, and will not
+   let a turn end while it stands. The debt lifts by itself once the stretch
+   is written up — its reference then appears as a source in the memory.
 
 2. Read for the current project: `MORF/Memory/<project>/L3.md`, `L2.md`,
    `L1.md`. Do not read `L0.md` — it is input for consolidation, not memory.
