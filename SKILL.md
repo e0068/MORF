@@ -74,10 +74,13 @@ the reasoning is in `MORF/Docs/`.
   never tracked is invisible to the layer: it will not be missed when someone
   deletes it.
 - Items already standing in a watched file show up as candidates, and `--track`
-  lists them. Which of them are rules is the owner's call, not yours — ask at
-  that moment, then run `--adopt` yourself for the ones they name. Ask then and
-  not later: candidates are deliberately not a debt, so nothing will bring the
-  question back to you.
+  lists them. The question is not which of them are imperatives — most will be.
+  It is which ones MORF should account for: count, watch, and notice when they
+  disappear. That is the owner's call, not yours — ask at that moment, then run
+  `--adopt` for the ones they name. Ask then and not later: candidates are
+  deliberately not a debt, so nothing will bring the question back to you.
+  An item left unadopted keeps working; it is an instruction the owner wrote,
+  and this layer simply does not answer for it.
 - When a watched file drifts, discharge it in this order: read
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --diff`, write what changed
   into that file's `*.log.md`, then `rules.py --seal <path>`.

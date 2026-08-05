@@ -504,8 +504,9 @@ def track(raw: str, cwd: Path) -> int:
         found = items(target)
         print(f"Watching {target}. Its log knows no rules yet.")
         if found:
-            print("Which of these are rules? Ask the owner, then --adopt the ones "
-                  "they name; the rest stay prose and are never charged.")
+            print("Which of these should MORF account for? Ask the owner, then "
+                  "--adopt the ones they name. The rest keep working — they are "
+                  "instructions the owner wrote, not lines this layer answers for.")
             for item in found:
                 print(f"  ? {item}")
     return 0

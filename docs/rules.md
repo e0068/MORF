@@ -105,7 +105,7 @@ Watched files are the ones MORF wrote to itself, plus those taken by hand; the p
 
 Watching begins at the moment a rule is put there, and the agent begins it, not you: write the text, take the file under watch if it is not already, enter the rule in the register and in the log. All three steps are its work. Your role in this layer is the one you have in the whole system: to approve a hook.
 
-One decision is still yours, because the machine cannot make it. Items already standing in a watched file are shown as candidates: an added rule and added prose cannot be told apart inside a file outside the contour. Which of them are rules is yours to say, and the agent enters them.
+One decision is still yours, because the machine cannot make it. Items already standing in a watched file are shown as candidates, and the question put to you is not which of them are imperatives — most will be. It is which ones MORF starts accounting for: counting them, noticing an edit, missing them when they go. An item left unadopted keeps working exactly as before; this layer simply does not answer for it.
 
 Taking a file under watch a second time is refused. It would overwrite the snapshot and seal a foreign change nobody has accounted for — and sealing must be a deliberate act, with a command of its own.
 
@@ -168,7 +168,7 @@ rules: ~/.claude/CLAUDE.md is gone while MORF still watches it
 
 **Why this way.** Counters and `[S= R= t=]` move on every handoff, and were they to lie in a file outside the contour the debt would arrive on every turn, while the machine's own edit of the numbers would run into its own hook. In MORF they create neither, and the machine does not touch the outside file at all.
 
-The comparison runs against the log, not against a list marker: in `SKILL.md` the items are prose throughout and not one is a rule, the `CLAUDE.md` template consists entirely of items, and the `<!-- morf:language -->` block is rewritten by the installer on every reinstall. The log knows exactly the items MORF put there.
+The comparison runs against the log, not against a list marker. These files hold imperatives of two origins: the ones that came out of memory, and the ones you wrote yourself — design, process, conventions, everything the routing does not cover. By shape they are indistinguishable: in `SKILL.md` the items are instructions throughout, the `CLAUDE.md` template consists entirely of items, and the `<!-- morf:language -->` block is rewritten by the installer on every reinstall. Only the log tells them apart: it knows exactly the items MORF put there, and those are exactly the ones MORF answers for.
 
 **Why not otherwise.** A rule added to the file by hand is unknown to the log, and it does count as drift — but not as a debt, as a candidate: a line saying "the file has an item the register does not", with an offer to take it under accounting. Telling an added rule from added prose inside a file outside the contour is impossible, so a human decides, not the machine.
 
