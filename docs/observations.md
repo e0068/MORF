@@ -43,6 +43,8 @@ The cost of forgetting — "what happens if I forget this" — is a judgement ca
 
 Mood stopped being a filter because an observation is indicative by nature: turning it into "do not do X" requires a move from fact to decision, and that move happens later. There is nothing to check at intake. What remains is diagnostics: an imperative line means the agent reflected too early.
 
+**The intake trusts that the transcript is independent of memory, and it is not.** A subagent reads `L1`–`L3` back into the session, its words land in the copy `/morf:handoff` reads, and read back they wear the face of a fresh event — an echo about to be recorded as an observation. So before a new line is written the thought is grepped across the levels above `L0`: a match is not something the system did not contain, it is something the system has just said. At most it is a `hit` on the line that already carries it, and only if the situation itself recurred; the echo alone earns nothing. The grep catches the literal repeat — a reworded one still rests on the reconciliation's own judgement, which no string match can stand in for.
+
 ---
 
 ## Levels and limits
@@ -94,9 +96,11 @@ The same version split observations into two pools, project and general, with a 
 <!-- moves: s:260901-aa11 fact, s:261102-bb22 observation -->
 ```
 
-Zero counters are omitted. The scores in square brackets are written by the script. The comment holding the move history is stripped before the context, so it costs nothing.
+Zero counters are omitted. The scores in square brackets are written by the script. The comment holding the move history is markup: invisible in a notes editor, one line to the agent that reads the file raw.
 
 A source points not only at a session but at a stretch inside it: `s:260803-a41f#412-980`. The line numbers come from `archive-session.py --handoff` — at that moment the copy ends exactly where the piece of work ended.
+
+A level file may carry one more comment, and it belongs to the file rather than to any line: `<!-- considered: s:260801-aaaa s:260801-bbbb -->`, the sessions this level weighed and declined — see [[foundation]]. Bare ids there, never a `#range`: a range reads as a stretch someone wrote up.
 
 **Why this way.** A line without sources is invalid and is discarded during consolidation: `/morf:why`, the time scale and the very possibility of disputing a record all rest on sources.
 

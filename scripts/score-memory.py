@@ -187,14 +187,22 @@ def rewrite_line(line: str, scale: dict[str, int]) -> str:
 
 
 def process(path: Path) -> int:
-    """Returns how many lines were rescored in one level file."""
+    """Returns how many lines were rescored in one level file.
+
+    A file whose numbers did not move is left untouched. Writing it back
+    regardless changed nothing a reader could see and everything a watcher
+    could: it churned the store's history and moved the modification time,
+    which another script had taken for a record of a decision.
+    """
     if path.stem not in CONFIG["levels"][1:]:   # the first level is the inbox, it is not scored
         return 0
     scale = exposure_scale(path.parent.name)
     lines = path.read_text(encoding="utf-8").splitlines()
     rewritten = [rewrite_line(line, scale) for line in lines]
-    path.write_text("\n".join(rewritten) + "\n", encoding="utf-8")
-    return sum(1 for a, b in zip(lines, rewritten) if a != b)
+    changed = sum(1 for a, b in zip(lines, rewritten) if a != b)
+    if changed:
+        path.write_text("\n".join(rewritten) + "\n", encoding="utf-8")
+    return changed
 
 
 # ===== Entry point =====

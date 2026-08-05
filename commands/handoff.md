@@ -23,10 +23,27 @@ Reconcile what happened with what the system predicted.
    Write it in the indicative, in the language set in CLAUDE.md.
    An observation is what occurred.
 
+   But first make sure it is unexpected: grep the thought across `L1`, `L2`
+   and `L3`. If memory already holds it, a subagent may have read that line
+   back into the session — read back, its own words look like a fresh event.
+   A match is at most a `hit` on the line that already carries it (step 2),
+   and only if the situation itself recurred; never a second line saying
+   what memory already holds.
+
 4. If a conclusion about how to act formed during the work, do not discard it.
    Record the observation in the indicative, mark it `↑`, and attach the
    proposed rule wording below it, in English.
 
-5. Invent nothing. If it did not happen in this session, it is not written.
+5. A fact article that took part in a decision gets `applied` raised in its
+   front matter — the same event `use` records for an observation. If it is
+   being applied again, return the line it came from to `L0.md` whole: same
+   wording, same counters, same sources. A new line would be a forgery, and
+   `/morf:why` has to lead back to the same conversations.
+
+6. Fill the `about` column of this session's row in `MORF/Memory/sessions.md`:
+   two or three words on what the work was about. The hook writes the row
+   before the work starts and cannot know that.
+
+7. Invent nothing. If it did not happen in this session, it is not written.
 
 Show me what you intend to write before writing it.

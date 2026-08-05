@@ -16,9 +16,9 @@ tags: [morf, infrastructure]
 
 ## The conversation archive
 
-**How it works.** One hook, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart).
+**How it works.** Two hooks, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart) and [`SessionEnd`](https://code.claude.com/docs/en/hooks#sessionend).
 
-`SessionStart` adds a row to `MORF/Memory/sessions.md` and remembers the session state. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
+`SessionStart` adds a row to `MORF/Memory/sessions.md` and registers the session. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
 
 A copy into the archive is made on every `/morf:handoff`: the session transcript, and the subagent files kept in the folder Claude Code names after the session.
 
@@ -34,9 +34,15 @@ After that Claude Code's own store is needed only for sweeping in sessions that 
 
 **The archive does not expire.** A reference appears together with the index row, that is, with the system already running, and a copy is never deleted — "older than the retention period" cannot happen here.
 
-A missing file means the session was cut short before the copy. `SessionStart` writes the state — into `.state/<working folder>.json`, one slot per folder rather than one for everything, because the command that reads it knows no session id and only the folder it runs in — and `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
+A missing file means the session was cut short before the copy. `SessionStart` writes the state — into `.state/<working folder>.json` — and `/morf:handoff` copies the files, so there is a window: kill the session hard and the identifier exists while the folder does not. The loss is apparent rather than real. **Claude Code writes the transcript as the session goes, not at its end**, so the conversation itself is intact in `~/.claude/projects/`, and the next `SessionStart` sweeps it in.
 
-A copy is not enough, though: a cut-short session also skipped `/morf:handoff`, so no observations were made from that stretch. That cannot be finished mechanically. So `SessionStart` works out how far the previous processing got and **tells the agent the unprocessed stretch**: its stdout reaches the session context. The working order says to start with `/morf:handoff` on that reference.
+The file is named after the folder because that is the only key `/morf:handoff` is given — a command is told no session id. What it holds, though, is **an index: every session that registered in that folder, each with its own transcript and its own mark**. A single record per folder made the folder an identity, and it is not one. Whichever session started last owned the slot: `/morf:handoff` answered another session's reference, a session still running in a second window was reported as cut short, and a resume wrote the mark of a stretch already handed off back to zero — the whole conversation came back as an unread debt from line 1, its observations already in the memory. A session is identified by the four characters of its id, so a resume past midnight is still the same session and not a second one.
+
+A copy is not enough, though: a session that ends without `/morf:handoff` leaves a stretch nothing was made of. That cannot be finished mechanically. So `SessionStart` works out how far each ended session of this folder got and **tells the agent the unprocessed stretches**: its stdout reaches the session context. The working order says to start with `/morf:handoff` on that reference.
+
+Ended, not merely other. `SessionEnd` says so outright, but the case worth sweeping — window closed, process killed, machine shut down — is exactly the one that hook never sees, so a transcript left untouched for two hours counts as over too: Claude Code appends to it on every turn, and silence that long is not a session thinking.
+
+**The memory is the evidence, the marker is only bookkeeping.** A stretch written up names itself as its source, so a debt is dropped for whatever the memory already cites — across every project, since a session run in a worktree is a project of its own by folder name while its observations are written onto the shelves of the project it was work on. Bookkeeping is what went wrong here twice; what a line says about where it came from cannot be wrong in the same way.
 
 **Nothing but copying writes into the archive.** It is filled by exactly one path — from Claude Code's history, by a hook rather than a tool. So any tool call touching `Transcripts` is either a mistake or an attempt to erase evidence, and telling them apart is pointless: there are no legitimate cases.
 
@@ -55,6 +61,12 @@ Setting `cleanupPeriodDays: 0` is not an option: the documentation calls it "nev
 **How it works.** Collecting was the only stage that ran by itself. Consolidation, the audit and the facts map each waited for someone to read the working order and recall the cadence, and for the whole life of this memory not one of them ever ran. Nothing about that looked wrong: an empty upper level is a correct state, an audit that has never run reports `last: none`, and a map with no articles is a map with no articles.
 
 `due.py` derives every obligation from what is already on disk, so nothing new is bookkept. A level is owed material when the level below carries a session it has never seen and enough of the project's sessions have passed since. The audit counts sessions against the id in `audit.md`. The map is stale when an article is newer than it. `SessionStart` prints them all.
+
+**Considered and declined is an outcome, and it is written down.** Weight is often too low to promote anything, and that verdict has to close the debt or the debt is noise. It closes it the same way every debt here closes — by appearing in the memory: the upper level names the sessions it weighed on a `<!-- considered: s:… -->` line, and they stop being unseen, because sources are read from the whole file and not only from its lines. Bare ids there, never a `#range`: a range reads as a stretch somebody wrote up, and would clear a handoff debt nobody paid.
+
+A level *holds* what its lines cite and has *seen* that plus what it declined, and only the second reading counts the verdict. Read the other way round, a decline travels upward as material the level above has never received — while no line up there carries it, so there is nothing to weigh and no way to answer.
+
+The alternative was tried: infer the decision from the file being newer than the one below. It was worse than nothing. `score-memory.py` rewrote every scored level on each run, so the step the working order puts **first** discharged every consolidation debt in the store before anyone had looked at a single line — and the store then reported itself as owing nothing. A timestamp is a proxy for having decided; the decision is the record, and only the record can stand in for it.
 
 **Why this way.** A debt is the agent's, so it is put in front of the agent — on [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit), whose stdout reaches the context, on **every** turn until the debt is gone. The pressure is not in blocking once but in arriving every time: a notice said once at session start is exactly what this replaces.
 
@@ -116,7 +128,7 @@ Four possible states, the exits of the verdict: `observation`, `fact`, `rule`, `
 
 **Why this way.** Sources let you trace where the content came from. They do not let you trace what the system did with it — and that is needed to see oscillation between fact and observation, and to know that a rule already failed once and came back.
 
-The comment is stripped before the context, so the bookkeeping is free.
+The comment is markup: a notes editor renders it away, so the bookkeeping stays out of sight while you read the record. It is not free for the agent, which reads the file raw — which is why it is one line and holds the moves and nothing else.
 
 **Why not otherwise.** A separate move journal would have to be linked to the records, and there is nothing to link by. Keeping it on the record itself solves that without a single new structure.
 

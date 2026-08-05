@@ -38,12 +38,13 @@ Through the marketplace, if you prefer:
 | Part | What it does |
 |---|---|
 | hook `SessionStart` | registers the session, sweeps in cut-short transcripts, gives the project its shelves, says what the memory owes |
+| hook `SessionEnd` | records that a session is over, so that nothing still running is swept as cut short |
 | hook `UserPromptSubmit` | puts what the memory owes in front of the agent, every turn |
 | hook `Stop` | will not let a turn end while a debt stands unsaid |
 | hook `PreToolUse` | keeps tools out of the conversation archive |
 | `/morf:handoff` | reconciliation at the end of a piece of work: transcript copy, counters, new observations |
 | `/morf:why` | from a line back to the conversation it came from |
-| `/morf:audit` | threshold review every tenth session of the project |
+| `/morf:audit` | the balancer — a threshold review every tenth session that keeps the flow present and varied |
 | skill `morf` | what to read at session start, how to consolidate, where things go |
 
 The model is on the canvas at `MORF/Memory/model.canvas`, the reasoning is

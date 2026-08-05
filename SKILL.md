@@ -17,9 +17,10 @@ the reasoning is in `MORF/Docs/`.
 1. If the session start reported an unfinished stretch from a previous
    session, run `/handoff` for that stretch first, using the reference
    it gave you. The transcript is archived, but nobody turned it into
-   observations yet. This one is enforced rather than advised: until the
-   stretch is handed off, `gate-handoff.py` refuses every prompt that is not
-   about the handoff itself, and hands the refused text back to be resent.
+   observations yet. This is a debt, not an advisory: `due.py` puts it in
+   front of you on every turn until the stretch is handed off, and will not
+   let a turn end while it stands. The debt lifts by itself once the stretch
+   is written up — its reference then appears as a source in the memory.
 
 2. Read for the current project: `MORF/Memory/<project>/L3.md`, `L2.md`,
    `L1.md`. Do not read `L0.md` — it is input for consolidation, not memory.
@@ -44,10 +45,25 @@ the reasoning is in `MORF/Docs/`.
      one `hit`: `hit` is the denominator, so a line that changed decisions but
      was never confirmed waits.
 
+   - a level fills with the cluster's imperative, not with a line that
+     happened to be held twice — its `hit` is the cluster's weight and its
+     sources are all of theirs. Look at what the level already holds before
+     deciding nothing qualifies for it.
    - promote a line one level up, displacing the weakest by `S`
+   - append your verdict to the level above, on its own line, naming every
+     session you weighed — promoted or not:
+
+     `<!-- considered: s:260801-aaaa s:260801-bbbb -->`
+
+     Session ids only, never a `#range`: a range there reads as a stretch
+     someone wrote up, and would clear a handoff debt nobody paid. Append a
+     new line each pass and never edit an earlier one — they add up, and
+     rewriting one reopens what it had closed. That is what closes the debt,
+     the same way a handed-off stretch closes its own: by appearing in the
+     memory. An unwritten decision is indistinguishable from work never done.
    - report what changed in a single table: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/trace.py --show`
      renders it from disk — a shelf per row, a level per column, each cell
-     `in ← count → out`. Show that matrix rather than an account of your own;
+     `count (+in −out)`. Show that matrix rather than an account of your own;
      it is the one report you cannot overstate. The same table prints itself on
      `Stop` whenever a turn moved memory, so after a `/handoff` too.
 

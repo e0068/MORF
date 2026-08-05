@@ -68,7 +68,7 @@ Three, and every "why this way" in these notes reduces to one of them.
 
 **Evolvability.** The system must survive its own mistakes without losing what it accumulated. So nothing here is deleted: what is displaced goes to `dropped` with its sources, a refutation narrows a rule rather than cancelling it, a withdrawn rule returns to memory with its history, and the transitions are recorded in `moves`. A decision you cannot learn has already failed will be made again in six months.
 
-**Speed.** Everything that loads by itself costs tokens in every session; everything hanging on a hook costs time on every turn; and every entity created costs the consulting it will take. Hence the hard level limits, the transition history in a `moves` comment that is stripped before the context, facts that nobody loads until they are searched for, scripts without a single dependency — and the refusal to create a second mechanism where an existing one copes: a repeat raises a counter rather than breeding a record, a skill is not an entity but an address on the reach axis, there is no *against* bundle because `miss` and `inverse` are already counted.
+**Speed.** Everything that loads by itself costs tokens in every session; everything hanging on a hook costs time on every turn; and every entity created costs the consulting it will take. Hence the hard level limits, the transition history riding on the record as one `moves` comment line rather than a journal of its own, facts that nobody loads until they are searched for, scripts without a single dependency — and the refusal to create a second mechanism where an existing one copes: a repeat raises a counter rather than breeding a record, a skill is not an entity but an address on the reach axis, there is no *against* bundle because `miss` and `inverse` are already counted.
 
 **Transparency and reliability.** One point of truth, and nothing breaks silently. Hence **encapsulation**: MORF writes only inside its own directory, and carries outward exactly one thing — the rule's text, without which it would not load. Hence a source on every line, an archive that never expires, `/why` down to the raw conversation, obligations derived from what already lies on disk — and the refusal of a duplicate in any form: justifying a rule in prose would be a third copy, a second file holding the project's path would go stale on the first move, a separate transition journal would have to be tied to the records. Hence two further refusals: not to count what cannot be checked, and not to decide for you where there is no right answer in advance — the scale unit and the language stay settings, and adopting an older line of your own stays your call — never one the system raises. Names belong here too: a path and a title must hold their meaning, because a name that stops holding it hides what the thing is.
 
@@ -92,7 +92,7 @@ One entrance and one exit, both through memory: a rule is derived from a mature 
 
 ### [[foundation]]
 
-The conversation archive and why the copy is permanent rather than a reference to Claude Code's store. The session index, which doubles as the time scale of the whole model. `/morf:why` — how to get from any line back to the conversation. The split of settings: numbers for the code, instructions for the agent. The `/morf:audit` every tenth session. And what stays outside the system: tasks.
+The conversation archive and why the copy is permanent rather than a reference to Claude Code's store. The session index, which doubles as the time scale of the whole model. `/morf:why` — how to get from any line back to the conversation. The split of settings: numbers for the code, instructions for the agent. The `/morf:audit` every tenth session — the balancer that keeps the flow present and varied. And what stays outside the system: tasks.
 
 ### [[setup]]
 
@@ -102,12 +102,16 @@ Steps, command texts, the `CLAUDE.md` template. Nothing of the model is restated
 
 | File | What it does |
 |---|---|
-| `archive-session.py` | the hook: session registration and transcript copies |
-| `score-memory.py` | `S`, `R`, `t` in the memory files |
+| `archive-session.py` | the hook: session registration, shelves, transcript copies |
+| `due.py` | what the memory owes, on every turn and at the end of one |
+| `score-memory.py` | `S`, `R`, `t` in the memory files, and `levels.md` |
 | `read-session.py` | a readable conversation from the archive, for `/morf:why` |
 | `build-index.py` | `TAGS.md` and `INDEX.md` — access to the fact layer |
 | `guard-archive.py` | blocks writes and deletes inside the archive |
-| `config.json` | weights, scale unit, level step |
+| `rules.py` | the register, the snapshots and what changed in a watched file |
+| `guard-rules.py` | keeps a watched file from drifting away from its record |
+| `morf.py` | where the MORF folder is; imported by the rest |
+| `config.json` | weights, scale unit, level step, the rule thresholds |
 
 ## What to know before starting
 

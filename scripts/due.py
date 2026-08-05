@@ -16,6 +16,13 @@ A level is owed material when the level below it carries a session the
 level above has never seen, and enough of this project's sessions have
 passed since. The audit counts sessions since the id in `audit.md`.
 
+Considered and declined is a legitimate outcome — weight is often too low to
+promote anything — and it discharges the debt the way every debt here does:
+by being written down. The level names what it weighed on a `<!-- considered:
+s:… -->` line, and a session named there is one it has seen. Inferring the
+decision from the file's timestamp instead was worse than nothing; the
+reasoning is in `Docs/foundation.md`.
+
     python3 due.py            what the current folder's project owes
     python3 due.py --all      every project
     python3 due.py --prompt   the same, addressed to the agent, on every turn
@@ -40,8 +47,15 @@ FACTS = morf.facts()
 INDEX = MEMORY / "INDEX.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 AUDIT_AFTER = 10                      # sessions, per the skill
+NOT_PROJECTS = ("Transcripts", "Scripts", ".state")
 
 SOURCE_RE = re.compile(r"s:(\d{6}-\w+)")
+STRETCH_RE = re.compile(r"s:(\d{6}-\w+)#(\d+)-(\d+)")
+# The verdict line, on its own line and nowhere else. It records what a level
+# weighed, which is not the same as what the memory has read: left in place it
+# would let a session named there pass for a stretch written up, and discharge
+# a handoff debt nobody paid.
+CONSIDERED_RE = re.compile(r"^[ \t]*<!--\s*considered:.*?-->[ \t]*$", re.M)
 ROW_RE = re.compile(r"^\|\s*s:(?P<id>[\w-]+)\s*\|[^|]*\|\s*(?P<project>[^|]*?)\s*\|")
 LAST_RE = re.compile(r"^last:\s*(\S+)", re.MULTILINE)
 
@@ -88,11 +102,21 @@ def after(project: str, marker: str) -> int:
     return sum(1 for _, owner in seen[at + 1:] if owner == project)
 
 
-def sources(path: Path) -> set[str]:
+def sources(path: Path, weighed: bool = True) -> set[str]:
+    """The sessions a level file names, verdict line included or not.
+
+    A level *holds* what its lines cite; it has *seen* that plus what it
+    weighed and declined. The two are not interchangeable. The level above
+    must count a decline as seen, or the verdict closes nothing. The level
+    below must not offer it as material, or a decline travels upward as
+    something the next level has never received — and no line up there
+    carries it, so there would be nothing to weigh.
+    """
     try:
-        return set(SOURCE_RE.findall(path.read_text(encoding="utf-8")))
+        text = path.read_text(encoding="utf-8")
     except OSError:
         return set()
+    return set(SOURCE_RE.findall(text if weighed else CONSIDERED_RE.sub("", text)))
 
 
 def elapsed(project: str, since: set[str]) -> int:
@@ -111,14 +135,8 @@ def consolidation(project: str) -> list[str]:
     step = config("horizon_step", 5)
     for i in range(len(levels) - 1):
         lower, upper = MEMORY / project / f"{levels[i]}.md", MEMORY / project / f"{levels[i + 1]}.md"
-        unseen = sources(lower) - sources(upper)
+        unseen = sources(lower, weighed=False) - sources(upper)
         if not unseen:
-            continue
-        # Considered and declined is a legitimate outcome — weight can be too
-        # low to promote anything. Without this the debt would stand forever,
-        # since the sessions below never become sessions above. Whoever looks
-        # writes the upper file back, changed or not, and that is the record.
-        if upper.exists() and lower.stat().st_mtime <= upper.stat().st_mtime:
             continue
         # The cadence of the level being filled: levels.md gives L1 after 1
         # session, L2 after 5, L3 after 25 — that is base * step ** i.
@@ -156,13 +174,75 @@ def is_project(project: str) -> bool:
     return bool(project) and project != "—" and (MEMORY / project / f"{levels[0]}.md").is_file()
 
 
-def stretch(cwd: str) -> str:
-    """A piece of conversation archived and never turned into observations."""
+def pending(cwd: str) -> list[str]:
+    """Stretches this folder has archived and not yet turned into observations.
+
+    One per session, from the folder's index. A `.pending` file is what an
+    earlier version wrote — one per folder, so a second dead session's stretch
+    overwrote the first's. Those are still read, and clear the way any stretch
+    now clears: by being handed off, which puts them in the memory as sources.
+    """
+    refs = []
     try:
-        ref = (morf.state() / f"{morf.slot(cwd)}.pending").read_text(encoding="utf-8").strip()
+        state = json.loads((morf.state() / f"{morf.slot(cwd)}.json").read_text(encoding="utf-8"))
+        refs += [record.get("pending") for record in (state.get("sessions") or {}).values()
+                 if record.get("pending")]
+    except (OSError, ValueError, AttributeError):
+        pass
+    try:
+        legacy = (morf.state() / f"{morf.slot(cwd)}.pending").read_text(encoding="utf-8").strip()
     except OSError:
+        legacy = ""
+    if legacy and legacy not in refs:
+        refs.append(legacy)
+    return refs
+
+
+def read_up_to() -> dict[str, int]:
+    """The last line of each session the memory already cites as a source.
+
+    A stretch written up as an observation names itself as the source, so the
+    memory is the record of what was read — evidence, where a marker is only
+    bookkeeping, and bookkeeping is what went wrong. Whatever the marker says,
+    lines already accounted for are not owed again.
+
+    Every project is read, not the one being asked about: a session run in a
+    worktree is a project of its own by folder name, while the observations it
+    produced are written onto the shelves of the project it was work on.
+    """
+    highest: dict[str, int] = {}
+    stems = config("levels", ["L0", "L1", "L2", "L3"]) + ["dropped"]
+    for folder in sorted(MEMORY.iterdir()) if MEMORY.is_dir() else []:
+        if not folder.is_dir() or folder.name in NOT_PROJECTS:
+            continue
+        for stem in stems:
+            try:
+                text = (folder / f"{stem}.md").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            for slug, _, end in STRETCH_RE.findall(CONSIDERED_RE.sub("", text)):
+                highest[slug] = max(highest.get(slug, 0), int(end))
+    return highest
+
+
+def unread(ref: str, covered: dict[str, int]) -> str:
+    """What is left of a stretch once the memory's own sources are subtracted."""
+    match = STRETCH_RE.fullmatch(ref)
+    if not match:
+        return ref              # not a range: nothing to subtract, report it whole
+    slug, start, end = match.group(1), int(match.group(2)), int(match.group(3))
+    done = covered.get(slug, 0)
+    if done >= end:
         return ""
-    return f"handoff: the stretch {ref} is archived and unread" if ref else ""
+    return f"s:{slug}#{max(start, done + 1)}-{end}"
+
+
+def stretch(cwd: str) -> list[str]:
+    """Pieces of conversation archived and never turned into observations."""
+    refs = pending(cwd)
+    covered = read_up_to() if refs else {}   # read only when something is claimed
+    return [f"handoff: the stretch {left} is archived and unread"
+            for left in (unread(ref, covered) for ref in refs) if left]
 
 
 def rules_owed(project: str, cwd: str) -> list[str]:
@@ -184,7 +264,7 @@ def owed(project: str, cwd: str = "") -> list[str]:
     """Everything this project owes. Nothing here waits on the owner."""
     if not is_project(project):
         return []
-    return [line for line in (stretch(cwd), audit(project), stale_map(),
+    return [line for line in (*stretch(cwd), audit(project), stale_map(),
                               *consolidation(project),
                               *rules_owed(project, cwd)) if line]
 
@@ -246,7 +326,7 @@ def main() -> None:
     if "--prompt" in sys.argv:
         return as_instruction()
     projects = ([p.name for p in sorted(MEMORY.iterdir())
-                 if p.is_dir() and p.name not in ("Transcripts", "Scripts", ".state")]
+                 if p.is_dir() and p.name not in NOT_PROJECTS]
                 if "--all" in sys.argv else [Path.cwd().name])
     for project in projects:
         for line in owed(project):
