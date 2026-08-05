@@ -497,8 +497,17 @@ def track(raw: str, cwd: Path) -> int:
                        f"address: {target}\n---\n", encoding="utf-8")
     map_add_section(section(scope, relative, cwd))
     if fresh:
-        print(f"Watching {target}. Its log knows no rules yet: every item shows as a "
-              f"candidate until --adopt takes it.")
+        # The candidates are printed here because this is the only moment the
+        # question is guaranteed to come up: they are deliberately not a debt,
+        # so nothing brings the agent back to ask later. A list the owner can
+        # answer beats an instruction to go and look.
+        found = items(target)
+        print(f"Watching {target}. Its log knows no rules yet.")
+        if found:
+            print("Which of these are rules? Ask the owner, then --adopt the ones "
+                  "they name; the rest stay prose and are never charged.")
+            for item in found:
+                print(f"  ? {item}")
     return 0
 
 

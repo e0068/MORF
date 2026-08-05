@@ -73,9 +73,11 @@ the reasoning is in `MORF/Docs/`.
   writes both the register line and the `added:` entry. A rule whose file was
   never tracked is invisible to the layer: it will not be missed when someone
   deletes it.
-- Items already standing in a watched file show up as candidates in `--diff`.
-  Which of them are rules is the owner's call, not yours — ask, then run
-  `--adopt` yourself for the ones they name.
+- Items already standing in a watched file show up as candidates, and `--track`
+  lists them. Which of them are rules is the owner's call, not yours — ask at
+  that moment, then run `--adopt` yourself for the ones they name. Ask then and
+  not later: candidates are deliberately not a debt, so nothing will bring the
+  question back to you.
 - When a watched file drifts, discharge it in this order: read
   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/rules.py --diff`, write what changed
   into that file's `*.log.md`, then `rules.py --seal <path>`.
