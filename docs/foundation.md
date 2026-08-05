@@ -56,11 +56,9 @@ Setting `cleanupPeriodDays: 0` is not an option: the documentation calls it "nev
 
 `due.py` derives every obligation from what is already on disk, so nothing new is bookkept. A level is owed material when the level below carries a session it has never seen and enough of the project's sessions have passed since. The audit counts sessions against the id in `audit.md`. The map is stale when an article is newer than it. `SessionStart` prints them all.
 
-**Why this way.** An obligation is spoken every session, and stops being a notice once it has been passed over twice its own period. At that point [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit) refuses the prompt, because by then the advisory has demonstrably lost — a line of text competes with whatever was just asked for, and loses every time. The refusal hands the prompt back to be resent, and anything about the handoff passes through, or there would be no way out.
+**Why this way.** A debt is the agent's, so it is put in front of the agent — on [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit), whose stdout reaches the context, on **every** turn until the debt is gone. The pressure is not in blocking once but in arriving every time: a notice said once at session start is exactly what this replaces.
 
-A full inbox blocks on its own without waiting for neglect: past the limit new observations displace earlier ones, and that loss is silent.
-
-**Why not otherwise.** Blocking every obligation at once would make a session unopenable on the day the memory falls behind, which teaches its owner to remove the hook rather than to consolidate.
+**Why not otherwise.** An earlier version exited 2 instead, which discards the prompt. That made a person retype what they had just written to pay for what an agent had forgotten, and the owner's part in this system is to approve a hook, nothing else. Enforcement that bills the human is worse than none: it teaches them to remove the hook.
 
 ---
 
