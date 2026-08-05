@@ -27,6 +27,16 @@ Reconcile what happened with what the system predicted.
    Record the observation in the indicative, mark it `↑`, and attach the
    proposed rule wording below it, in English.
 
-5. Invent nothing. If it did not happen in this session, it is not written.
+5. A fact article that took part in a decision gets `applied` raised in its
+   front matter — the same event `use` records for an observation. If it is
+   being applied again, return the line it came from to `L0.md` whole: same
+   wording, same counters, same sources. A new line would be a forgery, and
+   `/morf:why` has to lead back to the same conversations.
+
+6. Fill the `about` column of this session's row in `MORF/Memory/sessions.md`:
+   two or three words on what the work was about. The hook writes the row
+   before the work starts and cannot know that.
+
+7. Invent nothing. If it did not happen in this session, it is not written.
 
 Show me what you intend to write before writing it.
