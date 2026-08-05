@@ -271,12 +271,14 @@ def unaccounted(path: Path, cwd: Path) -> tuple[list[str], list[str], list[str]]
     """(gone or changed, added by hand, unresolvable log entries).
 
     gone     — the log knows these rules and the file no longer holds them;
-    extra    — an item nobody registered;
+    extra    — items the log does not know;
     broken   — a log entry that does not read back.
 
-    Only the first is a debt. Telling an added rule from added prose is
-    impossible in a file we do not own, so `extra` is reported and never
-    charged.
+    Only the first is a debt, and `extra` is not reported anywhere: MORF
+    accounts for what it wrote into a file and for nothing else. An item the
+    owner put there is theirs, works as it always did, and is not this layer's
+    to notice, propose or chase. It enters only on the owner's explicit word,
+    through `--adopt`, which is why that command is never suggested.
     """
     found = snapshot_of(path, cwd)
     if not found:
@@ -497,28 +499,21 @@ def track(raw: str, cwd: Path) -> int:
                        f"address: {target}\n---\n", encoding="utf-8")
     map_add_section(section(scope, relative, cwd))
     if fresh:
-        # The candidates are printed here because this is the only moment the
-        # question is guaranteed to come up: they are deliberately not a debt,
-        # so nothing brings the agent back to ask later. A list the owner can
-        # answer beats an instruction to go and look.
-        found = items(target)
-        print(f"Watching {target}. Its log knows no rules yet.")
-        if found:
-            print("Which of these should MORF account for? Ask the owner, then "
-                  "--adopt the ones they name. The rest keep working — they are "
-                  "instructions the owner wrote, not lines this layer answers for.")
-            for item in found:
-                print(f"  ? {item}")
+        print(f"Watching {target}.")
     return 0
 
 
 def adopt(raw: str, text: str, cwd: Path) -> int:
-    """The one place a human decision enters.
+    """Takes a line MORF did not write. Only ever on the owner's own word.
 
-    A file taken under watch has an empty log, so nothing in it can be a debt;
-    only a direct command turns an item into a rule. The source is the current
-    session, and it marks when MORF started counting — not where the rule
-    came from.
+    The layer watches what it generated. An instruction the owner wrote is
+    theirs: not a candidate, not a proposal, not something to ask about. This
+    command exists so that an older rule can still be brought in when they
+    decide to, and for no other reason — nothing in the system offers it.
+
+    The source is the current session, and it marks when MORF started counting,
+    not where the rule came from: `/why` on it reaches the adoption and no
+    further.
     """
     found = snapshot_of(Path(raw), cwd)
     if not found:
@@ -552,16 +547,14 @@ def diff(cwd: Path, only: str = "") -> int:
         target = address(scope, relative, cwd)
         if only and Path(only).expanduser().resolve() != target:
             continue
-        gone, extra, broken = unaccounted(target, cwd)
+        gone, _, broken = unaccounted(target, cwd)
         snap_here, log_here = pair(scope, relative)
-        if not gone and not extra and not broken and not outside_rules(target, snap_here, log_here):
+        if not gone and not broken and not outside_rules(target, snap_here, log_here):
             continue
         shown += 1
         print(f"\n{target}")
         for rule in gone:
             print(f"  − {rule}")
-        for item in extra:
-            print(f"  ? {item}   (the log does not know this one)")
         for entry in broken:
             print(f"  ! {entry}   (this log entry does not read back)")
         snap, log = pair(scope, relative)

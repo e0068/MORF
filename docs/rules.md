@@ -105,7 +105,9 @@ Watched files are the ones MORF wrote to itself, plus those taken by hand; the p
 
 Watching begins at the moment a rule is put there, and the agent begins it, not you: write the text, take the file under watch if it is not already, enter the rule in the register and in the log. All three steps are its work. Your role in this layer is the one you have in the whole system: to approve a hook.
 
-One decision is still yours, because the machine cannot make it. Items already standing in a watched file are shown as candidates, and the question put to you is not which of them are imperatives — most will be. It is which ones MORF starts accounting for: counting them, noticing an edit, missing them when they go. An item left unadopted keeps working exactly as before; this layer simply does not answer for it.
+**The layer accounts for what it wrote itself, and for nothing else.** Instructions you put in these files are yours: they work as they always did, and this layer will not notice, count or propose them. There are no candidates and no question put to you.
+
+An older rule can still be brought in, but only on your own word: the command exists and nothing will ever suggest it. Its source is the current session, and that marks when MORF started counting rather than where the rule came from — `/why` on it reaches the adoption and no further.
 
 Taking a file under watch a second time is refused. It would overwrite the snapshot and seal a foreign change nobody has accounted for — and sealing must be a deliberate act, with a command of its own.
 
@@ -170,7 +172,7 @@ rules: ~/.claude/CLAUDE.md is gone while MORF still watches it
 
 The comparison runs against the log, not against a list marker. These files hold imperatives of two origins: the ones that came out of memory, and the ones you wrote yourself — design, process, conventions, everything the routing does not cover. By shape they are indistinguishable: in `SKILL.md` the items are instructions throughout, the `CLAUDE.md` template consists entirely of items, and the `<!-- morf:language -->` block is rewritten by the installer on every reinstall. Only the log tells them apart: it knows exactly the items MORF put there, and those are exactly the ones MORF answers for.
 
-**Why not otherwise.** A rule added to the file by hand is unknown to the log, and it does count as drift — but not as a debt, as a candidate: a line saying "the file has an item the register does not", with an offer to take it under accounting. Telling an added rule from added prose inside a file outside the contour is impossible, so a human decides, not the machine.
+**Why not otherwise.** An item added to the file by hand is unknown to the log, and it should be: MORF answers for what it put there itself. Showing it as a candidate would mean offering to take someone else's line under accounting — deciding for the owner exactly where the owner decides.
 
 #### No editing over someone else's change
 
