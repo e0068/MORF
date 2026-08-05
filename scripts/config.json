@@ -2,6 +2,10 @@
   "weight_miss": 1,
   "weight_flip": 2,
   "min_events": 3,
+  "rulesInScore": 1.0,
+  "rulesIn": 0.5,
+  "rulesOutByMiss": 1,
+  "rulesOutByInverse": 1,
   "unit": "sessions",
   "levels": [
     "L0",

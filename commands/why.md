@@ -3,7 +3,8 @@ Take me back to the conversation a line came from.
 The argument is a fragment of an observation, an article or a rule.
 
 1. Find it across `MORF/Memory/`, including `dropped.md`, in fact
-   articles and in rule files. Say where it lives.
+   articles, in `MORF/Rules/map.md` and in `MORF/Rules/**/*.log.md`.
+   Say where it lives.
 2. For each source, run:
    `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/read-session.py <ref> <keyword>`
    A reference may carry a line range: `260803-a41f#412-980`.

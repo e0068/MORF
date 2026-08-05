@@ -39,13 +39,14 @@ Through the marketplace, if you prefer:
 ```
 MORF/
 ├── Memory/
-│   ├── Scripts/        five scripts and config.json
+│   ├── Scripts/        the scripts and config.json
 │   ├── Transcripts/    the conversation archive
 │   ├── <project>/      L0 … L3, dropped
 │   ├── sessions.md · audit.md · levels.md
 │   ├── TAGS.md · INDEX.md
 │   └── model.canvas
 ├── Facts/              fact articles
+├── Rules/              snapshots, logs and the rule register
 └── Docs/               these notes
 ```
 
@@ -75,7 +76,10 @@ Reconcile what happened with what the system predicted.
 
    `inverse` also creates a new line: the opposite is itself unexpected.
    A refutation matters more than a new finding — never skip it for brevity.
-   If a rule received an `inverse`, tell me at once: it is suspended now.
+   If a rule received a `miss` or an `inverse`, it leaves the rule layer in
+   this same session: its counters go up in `MORF/Rules/map.md`, the move is
+   written into that file's `*.log.md` as `returned:`, and the line goes back
+   to `L0` with its counters, sources and move history. Tell me at once.
 
 3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
@@ -99,7 +103,8 @@ Take me back to the conversation a line came from.
 The argument is a fragment of an observation, an article or a rule.
 
 1. Find it across `MORF/Memory/`, including `dropped.md`, in fact
-   articles and in rule files. Say where it lives.
+   articles, in `MORF/Rules/map.md` and in `MORF/Rules/**/*.log.md`.
+   Say where it lives.
 2. For each source, run:
    `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/read-session.py <ref> <keyword>`
    A reference may carry a line range: `260803-a41f#412-980`.

@@ -138,12 +138,28 @@ def stretch(cwd: str) -> str:
     return f"handoff: the stretch {ref} is archived and unread" if ref else ""
 
 
+def rules_owed(project: str, cwd: str) -> list[str]:
+    """What the rule layer owes, imported here rather than at module level.
+
+    This module hangs on `UserPromptSubmit` and on `Stop`; an unhandled
+    exception in a sibling would be a hook error shown to the owner on every
+    turn, which is the very thing this file was written to stop doing. So a
+    broken `rules.py` degrades to one line, never to the debt system going out.
+    """
+    try:
+        import rules
+        return rules.owed(project, cwd)
+    except Exception:                      # noqa: BLE001 — see above
+        return ["rules: bookkeeping unreadable"]
+
+
 def owed(project: str, cwd: str = "") -> list[str]:
     """Everything this project owes. Nothing here waits on the owner."""
     if not is_project(project):
         return []
     return [line for line in (stretch(cwd), audit(project), stale_map(),
-                              *consolidation(project)) if line]
+                              *consolidation(project),
+                              *rules_owed(project, cwd)) if line]
 
 
 # ===== Entry =====

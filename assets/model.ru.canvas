@@ -1,699 +1,699 @@
 {
- "nodes": [
-  {
-   "id": "t_session",
-   "type": "text",
-   "text": "**Когда** · запускается сессия",
-   "x": 0,
-   "y": 0,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "hook_start",
-   "type": "text",
-   "text": "**Хук** `SessionStart`\n\n`.claude/settings.json` → `archive-session.py`",
-   "x": 0,
-   "y": 160,
-   "width": 460,
-   "height": 112,
-   "color": "5"
-  },
-  {
-   "id": "src",
-   "type": "text",
-   "text": "**История Claude Code**\n\n`~/.claude/projects/<репозиторий>/*.jsonl`\n\nПишется по ходу сессии, не в конце. Живёт `cleanupPeriodDays`, месяца хватает.",
-   "x": 0,
-   "y": 382,
-   "width": 460,
-   "height": 184
-  },
-  {
-   "id": "g_archive",
-   "type": "group",
-   "label": "АРХИВ",
-   "x": -40,
-   "y": 742,
-   "width": 540,
-   "height": 582,
-   "color": "3",
-   "text": ""
-  },
-  {
-   "id": "archive",
-   "type": "text",
-   "text": "**`MORF/Memory/Transcripts/<id>/`**\n\nПапка на сессию, внутри все её файлы, включая транскрипты сабагентов.\n\nСырой, не пересказанный. Постоянный: не удаляется никогда. Obsidian `.jsonl` не индексирует.",
-   "x": 0,
-   "y": 782,
-   "width": 460,
-   "height": 208
-  },
-  {
-   "id": "sessions",
-   "type": "text",
-   "text": "**`sessions.md`** — указатель\n\n`s:260803-a41f` → дата, проект, о чём.\n\nПорядок строк проекта задаёт возраст событий: он меряется в сессиях.",
-   "x": 0,
-   "y": 1100,
-   "width": 460,
-   "height": 184,
-   "color": "3"
-  },
-  {
-   "id": "t_handoff",
-   "type": "text",
-   "text": "**Когда** · агент закончил кусок работы",
-   "x": 620,
-   "y": 340,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "handoff",
-   "type": "text",
-   "text": "**Команда** `/handoff`\n\n`archive-session.py --handoff` копирует транскрипт и возвращает ссылку на отрезок `s:…#412-980`.",
-   "x": 620,
-   "y": 500,
-   "width": 460,
-   "height": 136,
-   "color": "4"
-  },
-  {
-   "id": "counters",
-   "type": "text",
-   "text": "## Свериться с предсказанным\n\n`hit` сбылось · `use` повлияло на решение · `miss` не сбылось · `inverse` сбылось обратное\n\n`inverse` заводит ещё и новую строку.",
-   "x": 620,
-   "y": 760,
-   "width": 460,
-   "height": 184,
-   "color": "4"
-  },
-  {
-   "id": "g_obs",
-   "type": "group",
-   "label": "НАБЛЮДЕНИЯ",
-   "x": -40,
-   "y": 1400,
-   "width": 540,
-   "height": 1236,
-   "color": "4",
-   "text": ""
-  },
-  {
-   "id": "l0",
-   "type": "text",
-   "text": "**`L0.md`** · вход\n\n`hit:1 use:0 что случилось (s:…#412-980)`\n\nВ контекст сессии не грузится.",
-   "x": 0,
-   "y": 1440,
-   "width": 460,
-   "height": 160
-  },
-  {
-   "id": "l1",
-   "type": "text",
-   "text": "**`L1.md`**\n\nСбылось второй раз или изменило принятое решение.",
-   "x": 0,
-   "y": 1710,
-   "width": 460,
-   "height": 112
-  },
-  {
-   "id": "l2",
-   "type": "text",
-   "text": "**`L2.md`**\n\nМеняет поведение в задачах, которых ещё нет.",
-   "x": 0,
-   "y": 1960,
-   "width": 460,
-   "height": 112
-  },
-  {
-   "id": "l3",
-   "type": "text",
-   "text": "**`L3.md`**\n\nПрожило свой горизонт без опровержений.",
-   "x": 0,
-   "y": 2210,
-   "width": 460,
-   "height": 112
-  },
-  {
-   "id": "dropped",
-   "type": "text",
-   "text": "**`dropped.md`**\n\nУходит целиком: счётчики, источники, переходы. Без лимита.",
-   "x": 0,
-   "y": 2460,
-   "width": 460,
-   "height": 136
-  },
-  {
-   "id": "t_rollup",
-   "type": "text",
-   "text": "**Когда** · старт сессии и с прошлого раза накопилось",
-   "x": -620,
-   "y": 1400,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "cfg",
-   "type": "text",
-   "text": "**`Scripts/config.json`**\n\nВеса, единица шкалы, шаг ступеней, лимиты. Ступени публикуются в `levels.md`.",
-   "x": -620,
-   "y": 1560,
-   "width": 460,
-   "height": 136
-  },
-  {
-   "id": "scores",
-   "type": "text",
-   "text": "**`score-memory.py`**\n\n```\ns = e₁·N/e_N            просрочка\nC = 1 − 2^−(hit−miss−2·inverse)\nS = C + ln(1+use)       зрелость\nR = use × (1−C)         проверить\n```\n\nВозраст в сессиях, поэтому редкость не наказывается.",
-   "x": -620,
-   "y": 1800,
-   "width": 460,
-   "height": 280,
-   "color": "1"
-  },
-  {
-   "id": "vyvod",
-   "type": "text",
-   "text": "## Сделать вывод\n\nСобрать близкие строки в кластер и попробовать сформулировать императив.\n\n🟩 конец сессии — формулирует, пока помнит подробности\n🟦 старт следующей — решает по весу\n\nПравило заводится только после прогона по уже случившемуся.",
-   "x": 0,
-   "y": 2756,
-   "width": 460,
-   "height": 280,
-   "color": "2"
-  },
-  {
-   "id": "t_why",
-   "type": "text",
-   "text": "**Когда** · надо проверить, откуда взялась строка",
-   "x": -620,
-   "y": 700,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "why",
-   "type": "text",
-   "text": "**Команда** `/why`\n\nПо ссылке `s:…#412-980` находит сессию в указателе и открывает нужный отрезок разговора.",
-   "x": -620,
-   "y": 860,
-   "width": 460,
-   "height": 136,
-   "color": "1"
-  },
-  {
-   "id": "t_audit",
-   "type": "text",
-   "text": "**Когда** · каждая десятая сессия проекта",
-   "x": -620,
-   "y": 2420,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "audit",
-   "type": "text",
-   "text": "**Команда** `/memory-audit`\n\nСверяет вытесненное с записанным заново.\n\nТе же слова — порог занижен. Другие — формулировки нестабильны. Пусто — хороший результат.",
-   "x": -620,
-   "y": 2544,
-   "width": 460,
-   "height": 184,
-   "color": "3"
-  },
-  {
-   "id": "legend",
-   "type": "text",
-   "text": "# Модель памяти\n\n→ [[начало]] · [[основание]] · [[наблюдения]] · [[факты]] · [[правила]]\n\n**Как читается.** Фиолетовый узел — триггер, с него начинается цепочка. Заголовок с глаголом — действие, с путём или существительным — сущность. Подпись на стрелке — что при этом делается.\n\nЦвет стрелки — исполнитель:\n🟩 агент в задаче · 🟦 агент на старте сессии · 🟥 ты · ⬜ скрипт",
-   "x": -1240,
-   "y": 0,
-   "width": 460,
-   "height": 352,
-   "color": "3"
-  },
-  {
-   "id": "g_know",
-   "type": "group",
-   "label": "ФАКТЫ",
-   "x": 580,
-   "y": 2716,
-   "width": 1100,
-   "height": 900,
-   "color": "3",
-   "text": ""
-  },
-  {
-   "id": "know_add",
-   "type": "text",
-   "text": "## Дописать в заметку о явлении\n\nСначала найти существующую статью через `TAGS.md` → `INDEX.md`. Нет такой — завести.\n\nНаблюдение становится абзацем со своими источниками, а не отдельным файлом.",
-   "x": 620,
-   "y": 2756,
-   "width": 460,
-   "height": 208,
-   "color": "4"
-  },
-  {
-   "id": "know",
-   "type": "text",
-   "text": "**Заметка-явление** · `MORF/Facts`\n\nСтатья о предмете, а не один факт: копит наблюдения по мере их появления.\n\n```yaml\ndescription, tags\nscope: [проект]\napplied: 3\n```\n\nВнутри — разделы по граням явления, у каждого свои `s:` источники, и ссылки `[[…]]` на смежные явления.\n\nПовтор дописывает `s:` к существующему абзацу, новый раздел заводится под новую грань.",
-   "x": 1180,
-   "y": 2756,
-   "width": 460,
-   "height": 424,
-   "color": "3"
-  },
-  {
-   "id": "t_need",
-   "type": "text",
-   "text": "**Когда** · нужно факт о предмете",
-   "x": 620,
-   "y": 3096,
-   "width": 460,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "know_find",
-   "type": "text",
-   "text": "## Найти факт\n\n`TAGS.md` → нужная часть `INDEX.md` → 2–5 статей, собирает `build-index.py`.\n\nСвязанные явления берутся по ссылкам внутри статьи.\n\nТег оправдан, если по нему найдётся хотя бы две статьи.",
-   "x": 620,
-   "y": 3196,
-   "width": 460,
-   "height": 256,
-   "color": "#1a1a1a"
-  },
-  {
-   "id": "g_rule",
-   "type": "group",
-   "label": "ПРАВИЛА",
-   "x": -40,
-   "y": 3736,
-   "width": 1700,
-   "height": 1180,
-   "color": "6",
-   "text": ""
-  },
-  {
-   "id": "rule_addr",
-   "type": "text",
-   "text": "## Выбрать адрес\n\nПо охвату и частоте применения. Движение в обе стороны: шире при подтверждении на втором проекте, уже при опровержении.",
-   "x": 0,
-   "y": 3776,
-   "width": 460,
-   "height": 160,
-   "color": "4"
-  },
-  {
-   "id": "g_addr",
-   "type": "group",
-   "label": "Места хранения",
-   "x": 560,
-   "y": 3756,
-   "width": 520,
-   "height": 1080,
-   "text": ""
-  },
-  {
-   "id": "a_user",
-   "type": "text",
-   "text": "**`~/.claude/CLAUDE.md`**\n\nГрузится в каждой сессии любого проекта.",
-   "x": 600,
-   "y": 3776,
-   "width": 440,
-   "height": 112
-  },
-  {
-   "id": "a_proj",
-   "type": "text",
-   "text": "**`CLAUDE.md` проекта**\n\nГрузится в каждой сессии этого проекта.",
-   "x": 600,
-   "y": 3918,
-   "width": 440,
-   "height": 112
-  },
-  {
-   "id": "a_rules",
-   "type": "text",
-   "text": "**`.claude/rules/` с `paths:`**\n\nГрузится при работе с файлами по шаблону.",
-   "x": 600,
-   "y": 4060,
-   "width": 440,
-   "height": 112
-  },
-  {
-   "id": "a_skill",
-   "type": "text",
-   "text": "**`SKILL.md`**\n\nПодгружается по смыслу задачи: набор редко нужных правил.",
-   "x": 600,
-   "y": 4202,
-   "width": 440,
-   "height": 136
-  },
-  {
-   "id": "a_agent",
-   "type": "text",
-   "text": "**Определение агента**\n\nГрузится при вызове роли: самый узкий охват.",
-   "x": 600,
-   "y": 4368,
-   "width": 440,
-   "height": 112
-  },
-  {
-   "id": "rule_track",
-   "type": "text",
-   "text": "**Трек-рекорд правила**\n\n`<!-- A14 V3 X̄6 за:(s:…) против:(s:…) -->`\n\nПроигравшие наблюдения копят подтверждения. Перевесило «против» — пересмотр.\n\n`E = (V/A) × X̄`",
-   "x": 1160,
-   "y": 3776,
-   "width": 480,
-   "height": 232,
-   "color": "3"
-  },
-  {
-   "id": "t_violation",
-   "type": "text",
-   "text": "**Когда** · правило нарушено",
-   "x": 1160,
-   "y": 4076,
-   "width": 480,
-   "height": 64,
-   "color": "6"
-  },
-  {
-   "id": "rule_hook",
-   "type": "text",
-   "text": "## Перенести в принуждение\n\n`PreToolUse` · `permissions.deny` · CI\n\nПереносишь ты: хук закрывает обзор за своими пределами.",
-   "x": 1160,
-   "y": 4196,
-   "width": 480,
-   "height": 160,
-   "color": "1"
-  },
-  {
-   "id": "guard",
-   "type": "text",
-   "color": "1",
-   "text": "**Хук** `PreToolUse` · `guard-archive.py`\n\nЗапись и удаление в архиве блокируются: наполняется он только копированием из истории Claude Code.\n\nТебя не касается — ты правишь мимо инструментов агента.",
-   "x": -660,
-   "y": 1002,
-   "width": 460,
-   "height": 208
-  }
- ],
- "edges": [
-  {
-   "id": "e0",
-   "fromNode": "t_session",
-   "fromSide": "bottom",
-   "toNode": "hook_start",
-   "toSide": "top"
-  },
-  {
-   "id": "e1",
-   "fromNode": "hook_start",
-   "fromSide": "bottom",
-   "toNode": "src",
-   "toSide": "top",
-   "label": "прочитать прошлое состояние",
-   "color": "5"
-  },
-  {
-   "id": "e2",
-   "fromNode": "src",
-   "fromSide": "bottom",
-   "toNode": "archive",
-   "toSide": "top",
-   "label": "скопировать недостающее",
-   "color": "5"
-  },
-  {
-   "id": "e3",
-   "fromNode": "archive",
-   "fromSide": "bottom",
-   "toNode": "sessions",
-   "toSide": "top",
-   "label": "завести строку",
-   "color": "5"
-  },
-  {
-   "id": "e4",
-   "fromNode": "t_handoff",
-   "fromSide": "bottom",
-   "toNode": "handoff",
-   "toSide": "top"
-  },
-  {
-   "id": "e5",
-   "fromNode": "handoff",
-   "fromSide": "left",
-   "toNode": "archive",
-   "toSide": "right",
-   "label": "положить копию",
-   "color": "4"
-  },
-  {
-   "id": "e6",
-   "fromNode": "handoff",
-   "fromSide": "bottom",
-   "toNode": "counters",
-   "toSide": "top",
-   "label": "вернуть ссылку на отрезок",
-   "color": "4"
-  },
-  {
-   "id": "e7",
-   "fromNode": "counters",
-   "fromSide": "bottom",
-   "toNode": "l0",
-   "toSide": "right",
-   "label": "набить счётчики",
-   "color": "4"
-  },
-  {
-   "id": "e8",
-   "fromNode": "handoff",
-   "fromSide": "left",
-   "toNode": "l0",
-   "toSide": "right",
-   "label": "ужать в наблюдения со ссылками",
-   "color": "4"
-  },
-  {
-   "id": "e9",
-   "fromNode": "t_rollup",
-   "fromSide": "bottom",
-   "toNode": "cfg",
-   "toSide": "top"
-  },
-  {
-   "id": "e10",
-   "fromNode": "cfg",
-   "fromSide": "bottom",
-   "toNode": "scores",
-   "toSide": "top",
-   "label": "прочитать веса и ступени"
-  },
-  {
-   "id": "e11",
-   "fromNode": "scores",
-   "fromSide": "right",
-   "toNode": "l0",
-   "toSide": "left",
-   "label": "проставить S · R · t",
-   "color": "5"
-  },
-  {
-   "id": "e12",
-   "fromNode": "l0",
-   "fromSide": "bottom",
-   "toNode": "l1",
-   "toSide": "top",
-   "label": "шаг 3 · вытеснить слабейшую",
-   "color": "5"
-  },
-  {
-   "id": "e13",
-   "fromNode": "l1",
-   "fromSide": "bottom",
-   "toNode": "l2",
-   "toSide": "top",
-   "label": "шаг 2",
-   "color": "5"
-  },
-  {
-   "id": "e14",
-   "fromNode": "l2",
-   "fromSide": "bottom",
-   "toNode": "l3",
-   "toSide": "top",
-   "label": "шаг 1 · сводить сверху вниз",
-   "color": "5"
-  },
-  {
-   "id": "e15",
-   "fromNode": "l3",
-   "fromSide": "left",
-   "toNode": "vyvod",
-   "toSide": "left",
-   "label": "строки любой ступени",
-   "color": "5"
-  },
-  {
-   "id": "e16",
-   "fromNode": "vyvod",
-   "fromSide": "top",
-   "toNode": "dropped",
-   "toSide": "bottom",
-   "label": "вес затух",
-   "color": "5"
-  },
-  {
-   "id": "e25",
-   "fromNode": "t_why",
-   "fromSide": "bottom",
-   "toNode": "why",
-   "toSide": "top"
-  },
-  {
-   "id": "e26",
-   "fromNode": "why",
-   "fromSide": "right",
-   "toNode": "sessions",
-   "toSide": "left",
-   "label": "поднять отрезок",
-   "color": "1"
-  },
-  {
-   "id": "e27",
-   "fromNode": "t_audit",
-   "fromSide": "bottom",
-   "toNode": "audit",
-   "toSide": "top"
-  },
-  {
-   "id": "e28",
-   "fromNode": "dropped",
-   "fromSide": "left",
-   "toNode": "audit",
-   "toSide": "right",
-   "label": "сравнить",
-   "color": "5"
-  },
-  {
-   "id": "e_unfinished",
-   "fromNode": "src",
-   "fromSide": "right",
-   "toNode": "handoff",
-   "toSide": "left",
-   "color": "5",
-   "label": "сообщить неразобранный отрезок"
-  },
-  {
-   "id": "n27",
-   "fromNode": "know_add",
-   "fromSide": "right",
-   "toNode": "know",
-   "toSide": "left",
-   "label": "дописать раздел со ссылками",
-   "color": "4"
-  },
-  {
-   "id": "n28",
-   "fromNode": "t_need",
-   "fromSide": "bottom",
-   "toNode": "know_find",
-   "toSide": "top"
-  },
-  {
-   "id": "n29",
-   "fromNode": "know_find",
-   "fromSide": "right",
-   "toNode": "know",
-   "toSide": "left",
-   "label": "открыть статью",
-   "color": "5"
-  },
-  {
-   "id": "n30",
-   "fromNode": "vyvod",
-   "fromSide": "right",
-   "toNode": "know_add",
-   "toSide": "left",
-   "label": "императив не выводится",
-   "color": "5"
-  },
-  {
-   "id": "n31",
-   "fromNode": "know",
-   "fromSide": "top",
-   "toNode": "l0",
-   "toSide": "right",
-   "label": "applied вырос",
-   "color": "4"
-  },
-  {
-   "id": "n27",
-   "fromNode": "rule_addr",
-   "fromSide": "right",
-   "toNode": "a_user",
-   "toSide": "left",
-   "label": "положить по охвату",
-   "color": "6"
-  },
-  {
-   "id": "n28",
-   "fromNode": "a_user",
-   "fromSide": "right",
-   "toNode": "rule_track",
-   "toSide": "left",
-   "label": "вести учёт",
-   "color": "6"
-  },
-  {
-   "id": "n29",
-   "fromNode": "t_violation",
-   "fromSide": "top",
-   "toNode": "rule_track",
-   "toSide": "bottom",
-   "color": "1"
-  },
-  {
-   "id": "n30",
-   "fromNode": "rule_track",
-   "fromSide": "bottom",
-   "toNode": "rule_hook",
-   "toSide": "top",
-   "label": "высокое E",
-   "color": "1"
-  },
-  {
-   "id": "n31",
-   "fromNode": "rule_track",
-   "fromSide": "left",
-   "toNode": "l0",
-   "toSide": "right",
-   "label": "опровергнуто → inverse",
-   "color": "4"
-  },
-  {
-   "id": "n32",
-   "fromNode": "vyvod",
-   "fromSide": "bottom",
-   "toNode": "rule_addr",
-   "toSide": "top",
-   "label": "созрело и прогнано",
-   "color": "6"
-  },
-  {
-   "id": "guard_e",
-   "fromNode": "guard",
-   "fromSide": "right",
-   "toNode": "archive",
-   "toSide": "left",
-   "label": "не пускать",
-   "color": "1"
-  }
- ]
+  "nodes": [
+    {
+      "id": "t_session",
+      "type": "text",
+      "text": "**Когда** · запускается сессия",
+      "x": 0,
+      "y": 0,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "hook_start",
+      "type": "text",
+      "text": "**Хук** `SessionStart`\n\n`.claude/settings.json` → `archive-session.py`",
+      "x": 0,
+      "y": 160,
+      "width": 460,
+      "height": 112,
+      "color": "5"
+    },
+    {
+      "id": "src",
+      "type": "text",
+      "text": "**История Claude Code**\n\n`~/.claude/projects/<репозиторий>/*.jsonl`\n\nПишется по ходу сессии, не в конце. Живёт `cleanupPeriodDays`, месяца хватает.",
+      "x": 0,
+      "y": 382,
+      "width": 460,
+      "height": 184
+    },
+    {
+      "id": "g_archive",
+      "type": "group",
+      "label": "АРХИВ",
+      "x": -40,
+      "y": 742,
+      "width": 540,
+      "height": 582,
+      "color": "3",
+      "text": ""
+    },
+    {
+      "id": "archive",
+      "type": "text",
+      "text": "**`MORF/Memory/Transcripts/<id>/`**\n\nПапка на сессию, внутри все её файлы, включая транскрипты сабагентов.\n\nСырой, не пересказанный. Постоянный: не удаляется никогда. Obsidian `.jsonl` не индексирует.",
+      "x": 0,
+      "y": 782,
+      "width": 460,
+      "height": 208
+    },
+    {
+      "id": "sessions",
+      "type": "text",
+      "text": "**`sessions.md`** — указатель\n\n`s:260803-a41f` → дата, проект, о чём.\n\nПорядок строк проекта задаёт возраст событий: он меряется в сессиях.",
+      "x": 0,
+      "y": 1100,
+      "width": 460,
+      "height": 184,
+      "color": "3"
+    },
+    {
+      "id": "t_handoff",
+      "type": "text",
+      "text": "**Когда** · агент закончил кусок работы",
+      "x": 620,
+      "y": 340,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "handoff",
+      "type": "text",
+      "text": "**Команда** `/handoff`\n\n`archive-session.py --handoff` копирует транскрипт и возвращает ссылку на отрезок `s:…#412-980`.",
+      "x": 620,
+      "y": 500,
+      "width": 460,
+      "height": 136,
+      "color": "4"
+    },
+    {
+      "id": "counters",
+      "type": "text",
+      "text": "## Свериться с предсказанным\n\n`hit` сбылось · `use` повлияло на решение · `miss` не сбылось · `inverse` сбылось обратное\n\n`inverse` заводит ещё и новую строку.",
+      "x": 620,
+      "y": 760,
+      "width": 460,
+      "height": 184,
+      "color": "4"
+    },
+    {
+      "id": "g_obs",
+      "type": "group",
+      "label": "НАБЛЮДЕНИЯ",
+      "x": -40,
+      "y": 1400,
+      "width": 540,
+      "height": 1236,
+      "color": "4",
+      "text": ""
+    },
+    {
+      "id": "l0",
+      "type": "text",
+      "text": "**`L0.md`** · вход\n\n`hit:1 use:0 что случилось (s:…#412-980)`\n\nВ контекст сессии не грузится.",
+      "x": 0,
+      "y": 1440,
+      "width": 460,
+      "height": 160
+    },
+    {
+      "id": "l1",
+      "type": "text",
+      "text": "**`L1.md`**\n\nСбылось второй раз или изменило принятое решение.",
+      "x": 0,
+      "y": 1710,
+      "width": 460,
+      "height": 112
+    },
+    {
+      "id": "l2",
+      "type": "text",
+      "text": "**`L2.md`**\n\nМеняет поведение в задачах, которых ещё нет.",
+      "x": 0,
+      "y": 1960,
+      "width": 460,
+      "height": 112
+    },
+    {
+      "id": "l3",
+      "type": "text",
+      "text": "**`L3.md`**\n\nПрожило свой горизонт без опровержений.",
+      "x": 0,
+      "y": 2210,
+      "width": 460,
+      "height": 112
+    },
+    {
+      "id": "dropped",
+      "type": "text",
+      "text": "**`dropped.md`**\n\nУходит целиком: счётчики, источники, переходы. Без лимита.",
+      "x": 0,
+      "y": 2460,
+      "width": 460,
+      "height": 136
+    },
+    {
+      "id": "t_rollup",
+      "type": "text",
+      "text": "**Когда** · старт сессии и с прошлого раза накопилось",
+      "x": -620,
+      "y": 1400,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "cfg",
+      "type": "text",
+      "text": "**`Scripts/config.json`**\n\nВеса, единица шкалы, шаг ступеней, лимиты. Ступени публикуются в `levels.md`.",
+      "x": -620,
+      "y": 1560,
+      "width": 460,
+      "height": 136
+    },
+    {
+      "id": "scores",
+      "type": "text",
+      "text": "**`score-memory.py`**\n\n```\ns = e₁·N/e_N            просрочка\nC = 1 − 2^−(hit−miss−2·inverse)\nS = C + ln(1+use)       зрелость\nR = use × (1−C)         проверить\n```\n\nВозраст в сессиях, поэтому редкость не наказывается.",
+      "x": -620,
+      "y": 1800,
+      "width": 460,
+      "height": 280,
+      "color": "1"
+    },
+    {
+      "id": "vyvod",
+      "type": "text",
+      "text": "## Сделать вывод\n\nСобрать близкие строки в кластер и попробовать сформулировать императив.\n\n🟩 конец сессии — формулирует, пока помнит подробности\n🟦 старт следующей — решает по весу\n\nПравило заводится только после прогона по уже случившемуся.",
+      "x": 0,
+      "y": 2756,
+      "width": 460,
+      "height": 280,
+      "color": "2"
+    },
+    {
+      "id": "t_why",
+      "type": "text",
+      "text": "**Когда** · надо проверить, откуда взялась строка",
+      "x": -620,
+      "y": 700,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "why",
+      "type": "text",
+      "text": "**Команда** `/why`\n\nПо ссылке `s:…#412-980` находит сессию в указателе и открывает нужный отрезок разговора.",
+      "x": -620,
+      "y": 860,
+      "width": 460,
+      "height": 136,
+      "color": "1"
+    },
+    {
+      "id": "t_audit",
+      "type": "text",
+      "text": "**Когда** · каждая десятая сессия проекта",
+      "x": -620,
+      "y": 2420,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "audit",
+      "type": "text",
+      "text": "**Команда** `/memory-audit`\n\nСверяет вытесненное с записанным заново.\n\nТе же слова — порог занижен. Другие — формулировки нестабильны. Пусто — хороший результат.",
+      "x": -620,
+      "y": 2544,
+      "width": 460,
+      "height": 184,
+      "color": "3"
+    },
+    {
+      "id": "legend",
+      "type": "text",
+      "text": "# Модель памяти\n\n→ [[начало]] · [[основание]] · [[наблюдения]] · [[факты]] · [[правила]]\n\n**Как читается.** Фиолетовый узел — триггер, с него начинается цепочка. Заголовок с глаголом — действие, с путём или существительным — сущность. Подпись на стрелке — что при этом делается.\n\nЦвет стрелки — исполнитель:\n🟩 агент в задаче · 🟦 агент на старте сессии · 🟥 ты · ⬜ скрипт",
+      "x": -1240,
+      "y": 0,
+      "width": 460,
+      "height": 352,
+      "color": "3"
+    },
+    {
+      "id": "g_know",
+      "type": "group",
+      "label": "ФАКТЫ",
+      "x": 580,
+      "y": 2716,
+      "width": 1100,
+      "height": 900,
+      "color": "3",
+      "text": ""
+    },
+    {
+      "id": "know_add",
+      "type": "text",
+      "text": "## Дописать в заметку о явлении\n\nСначала найти существующую статью через `TAGS.md` → `INDEX.md`. Нет такой — завести.\n\nНаблюдение становится абзацем со своими источниками, а не отдельным файлом.",
+      "x": 620,
+      "y": 2756,
+      "width": 460,
+      "height": 208,
+      "color": "4"
+    },
+    {
+      "id": "know",
+      "type": "text",
+      "text": "**Заметка-явление** · `MORF/Facts`\n\nСтатья о предмете, а не один факт: копит наблюдения по мере их появления.\n\n```yaml\ndescription, tags\nscope: [проект]\napplied: 3\n```\n\nВнутри — разделы по граням явления, у каждого свои `s:` источники, и ссылки `[[…]]` на смежные явления.\n\nПовтор дописывает `s:` к существующему абзацу, новый раздел заводится под новую грань.",
+      "x": 1180,
+      "y": 2756,
+      "width": 460,
+      "height": 424,
+      "color": "3"
+    },
+    {
+      "id": "t_need",
+      "type": "text",
+      "text": "**Когда** · нужно факт о предмете",
+      "x": 620,
+      "y": 3096,
+      "width": 460,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "know_find",
+      "type": "text",
+      "text": "## Найти факт\n\n`TAGS.md` → нужная часть `INDEX.md` → 2–5 статей, собирает `build-index.py`.\n\nСвязанные явления берутся по ссылкам внутри статьи.\n\nТег оправдан, если по нему найдётся хотя бы две статьи.",
+      "x": 620,
+      "y": 3196,
+      "width": 460,
+      "height": 256,
+      "color": "#1a1a1a"
+    },
+    {
+      "id": "g_rule",
+      "type": "group",
+      "label": "ПРАВИЛА",
+      "x": -40,
+      "y": 3736,
+      "width": 1700,
+      "height": 1180,
+      "color": "6",
+      "text": ""
+    },
+    {
+      "id": "rule_addr",
+      "type": "text",
+      "text": "## Выбрать адрес\n\nПо охвату и частоте применения. Движение в обе стороны: шире при подтверждении на втором проекте, уже при опровержении.",
+      "x": 0,
+      "y": 3776,
+      "width": 460,
+      "height": 160,
+      "color": "4"
+    },
+    {
+      "id": "g_addr",
+      "type": "group",
+      "label": "Места хранения",
+      "x": 560,
+      "y": 3756,
+      "width": 520,
+      "height": 1080,
+      "text": ""
+    },
+    {
+      "id": "a_user",
+      "type": "text",
+      "text": "**`~/.claude/CLAUDE.md`**\n\nГрузится в каждой сессии любого проекта.",
+      "x": 600,
+      "y": 3776,
+      "width": 440,
+      "height": 112
+    },
+    {
+      "id": "a_proj",
+      "type": "text",
+      "text": "**`CLAUDE.md` проекта**\n\nГрузится в каждой сессии этого проекта.",
+      "x": 600,
+      "y": 3918,
+      "width": 440,
+      "height": 112
+    },
+    {
+      "id": "a_rules",
+      "type": "text",
+      "text": "**`.claude/rules/` с `paths:`**\n\nГрузится при работе с файлами по шаблону.",
+      "x": 600,
+      "y": 4060,
+      "width": 440,
+      "height": 112
+    },
+    {
+      "id": "a_skill",
+      "type": "text",
+      "text": "**`SKILL.md`**\n\nПодгружается по смыслу задачи: набор редко нужных правил.",
+      "x": 600,
+      "y": 4202,
+      "width": 440,
+      "height": 136
+    },
+    {
+      "id": "a_agent",
+      "type": "text",
+      "text": "**Определение агента**\n\nГрузится при вызове роли: самый узкий охват.",
+      "x": 600,
+      "y": 4368,
+      "width": 440,
+      "height": 112
+    },
+    {
+      "id": "rule_track",
+      "type": "text",
+      "text": "**Опись правил** · `MORF/Rules/map.md`\n\n`- hit:6 use:4 miss:1 [S=… R=… t=…] do not use X (s:…)`\n\nТе же счётчики, что у наблюдения, и лежат они внутри контура. Рядом, на каждый наблюдаемый файл: `*.snap.md` и `*.log.md`.\n\nВход: `S ≥ rulesInScore` и `use/hit ≥ rulesIn`.\nВыход: `miss ≥ rulesOutByMiss` или `inverse ≥ rulesOutByInverse`.",
+      "x": 1160,
+      "y": 3776,
+      "width": 480,
+      "height": 260,
+      "color": "3"
+    },
+    {
+      "id": "t_violation",
+      "type": "text",
+      "text": "**Когда** · правило нарушено",
+      "x": 1160,
+      "y": 4076,
+      "width": 480,
+      "height": 64,
+      "color": "6"
+    },
+    {
+      "id": "rule_hook",
+      "type": "text",
+      "text": "## Перенести в принуждение\n\n`PreToolUse` · `permissions.deny` · CI\n\nПереносишь ты: хук закрывает обзор за своими пределами.",
+      "x": 1160,
+      "y": 4196,
+      "width": 480,
+      "height": 160,
+      "color": "1"
+    },
+    {
+      "id": "guard",
+      "type": "text",
+      "color": "1",
+      "text": "**Хук** `PreToolUse` · `guard-archive.py`\n\nЗапись и удаление в архиве блокируются: наполняется он только копированием из истории Claude Code.\n\nТебя не касается — ты правишь мимо инструментов агента.",
+      "x": -660,
+      "y": 1002,
+      "width": 460,
+      "height": 208
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "fromNode": "t_session",
+      "fromSide": "bottom",
+      "toNode": "hook_start",
+      "toSide": "top"
+    },
+    {
+      "id": "e1",
+      "fromNode": "hook_start",
+      "fromSide": "bottom",
+      "toNode": "src",
+      "toSide": "top",
+      "label": "прочитать прошлое состояние",
+      "color": "5"
+    },
+    {
+      "id": "e2",
+      "fromNode": "src",
+      "fromSide": "bottom",
+      "toNode": "archive",
+      "toSide": "top",
+      "label": "скопировать недостающее",
+      "color": "5"
+    },
+    {
+      "id": "e3",
+      "fromNode": "archive",
+      "fromSide": "bottom",
+      "toNode": "sessions",
+      "toSide": "top",
+      "label": "завести строку",
+      "color": "5"
+    },
+    {
+      "id": "e4",
+      "fromNode": "t_handoff",
+      "fromSide": "bottom",
+      "toNode": "handoff",
+      "toSide": "top"
+    },
+    {
+      "id": "e5",
+      "fromNode": "handoff",
+      "fromSide": "left",
+      "toNode": "archive",
+      "toSide": "right",
+      "label": "положить копию",
+      "color": "4"
+    },
+    {
+      "id": "e6",
+      "fromNode": "handoff",
+      "fromSide": "bottom",
+      "toNode": "counters",
+      "toSide": "top",
+      "label": "вернуть ссылку на отрезок",
+      "color": "4"
+    },
+    {
+      "id": "e7",
+      "fromNode": "counters",
+      "fromSide": "bottom",
+      "toNode": "l0",
+      "toSide": "right",
+      "label": "набить счётчики",
+      "color": "4"
+    },
+    {
+      "id": "e8",
+      "fromNode": "handoff",
+      "fromSide": "left",
+      "toNode": "l0",
+      "toSide": "right",
+      "label": "ужать в наблюдения со ссылками",
+      "color": "4"
+    },
+    {
+      "id": "e9",
+      "fromNode": "t_rollup",
+      "fromSide": "bottom",
+      "toNode": "cfg",
+      "toSide": "top"
+    },
+    {
+      "id": "e10",
+      "fromNode": "cfg",
+      "fromSide": "bottom",
+      "toNode": "scores",
+      "toSide": "top",
+      "label": "прочитать веса и ступени"
+    },
+    {
+      "id": "e11",
+      "fromNode": "scores",
+      "fromSide": "right",
+      "toNode": "l0",
+      "toSide": "left",
+      "label": "проставить S · R · t",
+      "color": "5"
+    },
+    {
+      "id": "e12",
+      "fromNode": "l0",
+      "fromSide": "bottom",
+      "toNode": "l1",
+      "toSide": "top",
+      "label": "шаг 3 · вытеснить слабейшую",
+      "color": "5"
+    },
+    {
+      "id": "e13",
+      "fromNode": "l1",
+      "fromSide": "bottom",
+      "toNode": "l2",
+      "toSide": "top",
+      "label": "шаг 2",
+      "color": "5"
+    },
+    {
+      "id": "e14",
+      "fromNode": "l2",
+      "fromSide": "bottom",
+      "toNode": "l3",
+      "toSide": "top",
+      "label": "шаг 1 · сводить сверху вниз",
+      "color": "5"
+    },
+    {
+      "id": "e15",
+      "fromNode": "l3",
+      "fromSide": "left",
+      "toNode": "vyvod",
+      "toSide": "left",
+      "label": "строки любой ступени",
+      "color": "5"
+    },
+    {
+      "id": "e16",
+      "fromNode": "vyvod",
+      "fromSide": "top",
+      "toNode": "dropped",
+      "toSide": "bottom",
+      "label": "вес затух",
+      "color": "5"
+    },
+    {
+      "id": "e25",
+      "fromNode": "t_why",
+      "fromSide": "bottom",
+      "toNode": "why",
+      "toSide": "top"
+    },
+    {
+      "id": "e26",
+      "fromNode": "why",
+      "fromSide": "right",
+      "toNode": "sessions",
+      "toSide": "left",
+      "label": "поднять отрезок",
+      "color": "1"
+    },
+    {
+      "id": "e27",
+      "fromNode": "t_audit",
+      "fromSide": "bottom",
+      "toNode": "audit",
+      "toSide": "top"
+    },
+    {
+      "id": "e28",
+      "fromNode": "dropped",
+      "fromSide": "left",
+      "toNode": "audit",
+      "toSide": "right",
+      "label": "сравнить",
+      "color": "5"
+    },
+    {
+      "id": "e_unfinished",
+      "fromNode": "src",
+      "fromSide": "right",
+      "toNode": "handoff",
+      "toSide": "left",
+      "color": "5",
+      "label": "сообщить неразобранный отрезок"
+    },
+    {
+      "id": "n27",
+      "fromNode": "know_add",
+      "fromSide": "right",
+      "toNode": "know",
+      "toSide": "left",
+      "label": "дописать раздел со ссылками",
+      "color": "4"
+    },
+    {
+      "id": "n28",
+      "fromNode": "t_need",
+      "fromSide": "bottom",
+      "toNode": "know_find",
+      "toSide": "top"
+    },
+    {
+      "id": "n29",
+      "fromNode": "know_find",
+      "fromSide": "right",
+      "toNode": "know",
+      "toSide": "left",
+      "label": "открыть статью",
+      "color": "5"
+    },
+    {
+      "id": "n30",
+      "fromNode": "vyvod",
+      "fromSide": "right",
+      "toNode": "know_add",
+      "toSide": "left",
+      "label": "императив не выводится",
+      "color": "5"
+    },
+    {
+      "id": "n31",
+      "fromNode": "know",
+      "fromSide": "top",
+      "toNode": "l0",
+      "toSide": "right",
+      "label": "applied вырос",
+      "color": "4"
+    },
+    {
+      "id": "n27",
+      "fromNode": "rule_addr",
+      "fromSide": "right",
+      "toNode": "a_user",
+      "toSide": "left",
+      "label": "положить по охвату",
+      "color": "6"
+    },
+    {
+      "id": "n28",
+      "fromNode": "a_user",
+      "fromSide": "right",
+      "toNode": "rule_track",
+      "toSide": "left",
+      "label": "вести учёт",
+      "color": "6"
+    },
+    {
+      "id": "n29",
+      "fromNode": "t_violation",
+      "fromSide": "top",
+      "toNode": "rule_track",
+      "toSide": "bottom",
+      "color": "1"
+    },
+    {
+      "id": "n30",
+      "fromNode": "rule_track",
+      "fromSide": "bottom",
+      "toNode": "rule_hook",
+      "toSide": "top",
+      "label": "высокое E",
+      "color": "1"
+    },
+    {
+      "id": "n31",
+      "fromNode": "rule_track",
+      "fromSide": "left",
+      "toNode": "l0",
+      "toSide": "right",
+      "label": "опровергнуто → inverse",
+      "color": "4"
+    },
+    {
+      "id": "n32",
+      "fromNode": "vyvod",
+      "fromSide": "bottom",
+      "toNode": "rule_addr",
+      "toSide": "top",
+      "label": "созрело и прогнано",
+      "color": "6"
+    },
+    {
+      "id": "guard_e",
+      "fromNode": "guard",
+      "fromSide": "right",
+      "toNode": "archive",
+      "toSide": "left",
+      "label": "не пускать",
+      "color": "1"
+    }
+  ]
 }
