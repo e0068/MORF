@@ -46,9 +46,9 @@ DEFAULTS = {
 # lines and hand-written ones both parse.
 LINE_RE = re.compile(
     r"^(?P<head>- (?:↑ )?)"
-    r"(?:hit:(?P<hit>\d+) ?)?(?:use:(?P<use>\d+) ?)?"
-    r"(?:miss:(?P<miss>\d+) ?)?(?:inverse:(?P<inverse>\d+) ?)?"
-    r"(?: \[[^\]]*\])?"
+    r"(?:hit:(?P<hit>\d+))? ?(?:use:(?P<use>\d+))? ?"
+    r"(?:miss:(?P<miss>\d+))? ?(?:inverse:(?P<inverse>\d+))? ?"
+    r"(?:\[[^\]]*\])?"
     r"(?P<text>.+?)"
     r"\((?P<sources>s:[^)]*)\)\s*$"
 )
