@@ -55,18 +55,37 @@ def config(key: str, fallback):
 
 # ===== Reading what is on disk =====
 
-def order(project: str) -> list[str]:
-    """This project's session ids, oldest first, as the index recorded them."""
+def rows() -> list[tuple[str, str]]:
+    """(id, project) in the order the index recorded them."""
     try:
-        rows = SESSIONS.read_text(encoding="utf-8").splitlines()
+        lines = SESSIONS.read_text(encoding="utf-8").splitlines()
     except OSError:
         return []
     found = []
-    for row in rows:
-        match = ROW_RE.match(row)
-        if match and match.group("project") == project:
-            found.append(match.group("id"))
+    for line in lines:
+        match = ROW_RE.match(line)
+        if match:
+            found.append((match.group("id"), match.group("project")))
     return found
+
+
+def order(project: str) -> list[str]:
+    """This project's session ids, oldest first."""
+    return [name for name, owner in rows() if owner == project]
+
+
+def after(project: str, marker: str) -> int:
+    """This project's sessions recorded after the marker, wherever it stood.
+
+    The audit keeps one marker for the whole vault, so it names a session of
+    whichever project was audited. Looking for it inside one project's list
+    finds nothing and reports every session as unaudited.
+    """
+    seen = rows()
+    at = next((n for n, (name, _) in enumerate(seen) if name == marker), None)
+    if at is None:
+        return sum(1 for _, owner in seen if owner == project)
+    return sum(1 for _, owner in seen[at + 1:] if owner == project)
 
 
 def sources(path: Path) -> set[str]:
@@ -95,7 +114,15 @@ def consolidation(project: str) -> list[str]:
         unseen = sources(lower) - sources(upper)
         if not unseen:
             continue
-        after = horizons * step ** (i - 1) if i else 0
+        # Considered and declined is a legitimate outcome — weight can be too
+        # low to promote anything. Without this the debt would stand forever,
+        # since the sessions below never become sessions above. Whoever looks
+        # writes the upper file back, changed or not, and that is the record.
+        if upper.exists() and lower.stat().st_mtime <= upper.stat().st_mtime:
+            continue
+        # The cadence of the level being filled: levels.md gives L1 after 1
+        # session, L2 after 5, L3 after 25 — that is base * step ** i.
+        after = horizons * step ** i
         waited = elapsed(project, sources(upper))
         if waited >= after:
             owed.append(f"{levels[i]} → {levels[i + 1]}: {len(unseen)} session(s) never lifted, "
@@ -107,8 +134,8 @@ def audit(project: str) -> str:
     """The skill sets the timer at ten sessions and says not to ask about it."""
     text = AUDIT.read_text(encoding="utf-8") if AUDIT.is_file() else ""
     match = LAST_RE.search(text)
-    last = match.group(1) if match else "none"
-    waited = elapsed(project, set() if last in ("", "none") else {last})
+    last = match.group(1).removeprefix("s:") if match else "none"
+    waited = len(order(project)) if last in ("", "none") else after(project, last)
     return f"audit: {waited} session(s) since {last}, due at {AUDIT_AFTER}" if waited >= AUDIT_AFTER else ""
 
 
