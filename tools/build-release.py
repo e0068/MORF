@@ -27,7 +27,10 @@ ROOT = Path(__file__).resolve().parent.parent
 BODY = ROOT / "tools" / "installer.sh"
 TARGET = ROOT / "dist" / "Install-MORF.command"
 MARKER = "__PAYLOAD__"
-SKIP = {".git", ".DS_Store", "dist", "tools", "__pycache__"}
+# `.claude` holds the worktrees of in-flight branches, and nothing tracked:
+# a build run from the main checkout was packing every branch's copy of the
+# plugin into the payload — 107 files where there are 37.
+SKIP = {".git", ".claude", ".DS_Store", "dist", "tools", "__pycache__"}
 WIDTH = 100
 
 
