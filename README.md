@@ -38,6 +38,7 @@ Through the marketplace, if you prefer:
 | Part | What it does |
 |---|---|
 | hook `SessionStart` | registers the session, sweeps in cut-short transcripts, gives the project its shelves, says what the memory owes |
+| hook `SessionEnd` | records that a session is over, so that nothing still running is swept as cut short |
 | hook `UserPromptSubmit` | puts what the memory owes in front of the agent, every turn |
 | hook `Stop` | will not let a turn end while a debt stands unsaid |
 | hook `PreToolUse` | keeps tools out of the conversation archive |

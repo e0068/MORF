@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
 """Maintains the session index and archives transcripts.
 
-SessionStart — adds a row to sessions.md and remembers the session state so
-               that /handoff can copy without a hook. It also sweeps in
-               transcripts left behind by a cut-short session and tells the
-               agent which stretch of the previous one is unprocessed.
+SessionStart — adds a row to sessions.md and registers the session in the
+               folder's index so that /handoff can copy without a hook. It
+               also sweeps in transcripts left behind by sessions that ended
+               without one, and tells the agent which stretches are unread.
+SessionEnd   — records that a session is over, so that nothing still running
+               is swept as though it had been cut short.
 --handoff    — copies the transcript now and prints a reference to the
                stretch written since the previous call: s:260803-a41f#412-980.
 
-One hook is enough. Copying is done by /handoff, sweeping by the session
-start, and the state is overwritten on the next run: an unclosed tail is
-honestly reported as unprocessed.
+Every session that registered in a folder is kept there, each with its own
+mark: the folder is the only key /handoff is given, but it is not an identity.
+A tail nobody handed off stays on the record and is honestly reported as
+unprocessed until it is read.
 
 Nothing is interpreted — only facts that can be established mechanically.
 No dependencies beyond the standard library.
 """
 
 import json
+import os
 import shutil
 import sys
+import time
 from datetime import date
 from pathlib import Path
 
@@ -36,6 +41,13 @@ CONFIG_FILE = Path(__file__).with_name("config.json")
 DEFAULT_LEVELS = ["L0", "L1", "L2", "L3"]
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
 CLAUDE_PROJECTS = Path.home() / ".claude" / "projects"
+
+# How long a transcript must stay untouched before the session behind it counts
+# as over. Claude Code appends to it on every turn, so silence this long is not
+# a session thinking. It only decides the case `SessionEnd` never sees — window
+# closed, process killed — and being late here costs a delayed sweep, while
+# being early costs a running session reported as cut short.
+IDLE = 2 * 3600
 
 
 # ===== Reading the event =====
@@ -59,8 +71,8 @@ def project_key(cwd: str) -> str:
     One state file for every project made whichever session started last the
     owner of `/handoff`: it answered with another project's slug, then with a
     transcript that no longer existed. The command knows no session id, only
-    the folder it runs in — so the folder is what the state is keyed by.
-    Two sessions in the *same* folder still share a slot; that one is open.
+    the folder it runs in — so the folder is what the *file* is named by. What
+    it holds is an index of sessions, not one record.
     """
     path = Path(cwd).expanduser() if cwd else Path.cwd()
     return str(path).strip("/").replace("/", "-") or "root"
@@ -68,10 +80,6 @@ def project_key(cwd: str) -> str:
 
 def current_of(cwd: str) -> Path:
     return STATE / f"{project_key(cwd)}.json"
-
-
-def pending_of(cwd: str) -> Path:
-    return STATE / f"{project_key(cwd)}.pending"
 
 
 def project_name(cwd: str) -> str:
@@ -196,44 +204,193 @@ def prepare(project: str) -> int:
 
 
 # ===== Session state =====
+#
+# `.state/<working folder>.json` holds `sessions`: one record per session that
+# registered in that folder, each with its own transcript, mark and unread
+# stretch. A single record per folder meant "the previous session" was
+# whichever one last touched it — /handoff answered another session's
+# reference, and a session still running in another window was reported as cut
+# short. The slug, transcript and mark of the session touched last are also
+# written at the top level: `rules.py` reads the slug from there, and an older
+# installed copy of this script reads all three.
 
-def remember(slug: str, transcript: str, cwd: str) -> None:
-    """The hook knows the transcript path, the command does not. Remember it."""
-    current = current_of(cwd)
-    current.parent.mkdir(parents=True, exist_ok=True)
-    current.write_text(json.dumps({"slug": slug, "transcript": transcript, "mark": 0}),
-                       encoding="utf-8")
 
-
-def unfinished(slug: str, cwd: str) -> str:
-    """Checks whether the previous session was cut short and finishes its copy.
-
-    The previous state always stays on disk; what matters is whether its tail
-    was processed. The copy is finished here, but turning the stretch into
-    observations is the agent's job — it cannot be done mechanically.
-    Returns a message for the agent: SessionStart stdout reaches the context.
-    """
+def load(cwd: str) -> dict:
+    """The folder's index. A file written before it existed reads as one entry."""
     try:
         state = json.loads(current_of(cwd).read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        state = {}
+    if not isinstance(state, dict):
+        state = {}
+    if not isinstance(state.get("sessions"), dict):
+        slug = state.get("slug")
+        state["sessions"] = {slug: {"transcript": state.get("transcript", ""),
+                                    "mark": state.get("mark", 0)}} if slug else {}
+    return state
+
+
+def save(cwd: str, state: dict, current: str = "") -> None:
+    """Writes the index, naming at the top level the session touched last.
+
+    Written aside and moved into place. One file now holds every session of
+    the folder, so a truncating write killed halfway would take all their
+    marks at once — a mark lost to bookkeeping is the failure this whole
+    change exists to end, and it must not come back through the door. The
+    staged name carries the process id, because two windows in one folder is
+    the ordinary case here: the worst two saves in the same instant can do is
+    lose one of them, not publish a file that is half of each.
+    """
+    if current:
+        record = state["sessions"].get(current, {})
+        state.update(slug=current, transcript=record.get("transcript", ""),
+                     mark=record.get("mark", 0))
+    path = current_of(cwd)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    staged = path.with_name(f"{path.name}.{os.getpid()}.writing")
+    try:
+        staged.write_text(json.dumps(state), encoding="utf-8")
+        os.replace(staged, path)
+    finally:
+        staged.unlink(missing_ok=True)
+
+
+def slug_for(sessions: dict, session_id: str) -> str:
+    """The slug this session already registered under, whatever day that was.
+
+    A session resumed after midnight is given a new slug by `session_slug()`,
+    and a new slug is a new session: a mark starting at zero and a second row
+    in the index for one conversation. The four characters of the id identify
+    it; the date only makes the name readable.
+    """
+    tail = (session_id or "")[:4]
+    return next((slug for slug in sessions if tail and slug.endswith(f"-{tail}")), "")
+
+
+def ended(record: dict) -> bool:
+    """Whether the session behind this record is over.
+
+    `SessionEnd` says so outright, but the case worth sweeping is the one that
+    hook never sees: window closed, process killed, machine shut down. So a
+    transcript untouched for `IDLE` counts as over too, and a transcript that
+    is gone counts as over because nothing can still be writing to it.
+    """
+    if record.get("ended") or not record.get("transcript"):
+        return True
+    try:
+        return time.time() - Path(record["transcript"]).expanduser().stat().st_mtime >= IDLE
+    except OSError:
+        return True
+
+
+def prune(sessions: dict, keep: str) -> None:
+    """Forgets sessions Claude Code no longer keeps and that owe nothing.
+
+    The index would otherwise grow for the life of the folder. A record is
+    dropped only when its transcript is gone *and* nothing unread stands
+    against it: a debt outlives the file it was raised from. The session
+    registering right now is kept whatever the hook told us about its file.
+    """
+    for slug in [name for name, record in sessions.items()
+                 if name != keep and not record.get("pending")
+                 and not Path(record.get("transcript") or "").expanduser().is_file()]:
+        del sessions[slug]
+
+
+def remember(slug: str, transcript: str, cwd: str) -> None:
+    """Registers the session in the folder's index, keeping what it earned.
+
+    This ran on every start, resume and compact and wrote the mark back to
+    zero each time — into the very field `/handoff` uses to record the last
+    line it handed off. A session that came back after a handoff was therefore
+    reported at its next start as unread from line 1, and hours of it, already
+    written into the memory as observations, were read a second time. Only a
+    session this folder has not seen before starts at zero.
+    """
+    state = load(cwd)
+    record = state["sessions"].setdefault(slug, {"mark": 0})
+    record["transcript"] = transcript or record.get("transcript", "")
+    record["ended"] = False
+    prune(state["sessions"], keep=slug)
+    save(cwd, state, slug)
+
+
+def settled(record: dict, covered: dict) -> bool:
+    """Whether the memory now accounts for this record's unread stretch.
+
+    A stretch written up names itself as its source, so the memory says when
+    a debt is paid. Nothing else did: the marker survived the work it stood
+    for, and a session kept its record — and its line at every session start
+    — for as long as the folder lived.
+    """
+    return not due.unread(record["pending"], covered)
+
+
+def unfinished(slug: str, cwd: str) -> str:
+    """Finishes the copy for sessions of this folder that ended unprocessed.
+
+    A mismatched slug used to be proof enough that the previous session was
+    cut short. It was not: it also matched a session working in another window
+    at that moment. Only a session that has actually ended is swept, and each
+    keeps its own unread stretch instead of overwriting the one before it.
+
+    The copy is finished here; turning a stretch into observations is the
+    agent's job. Returns a message for it: SessionStart stdout reaches the
+    context.
+    """
+    state, notes, covered, changed = load(cwd), [], None, False
+    for other, record in state["sessions"].items():
+        if other == slug or not ended(record):
+            continue
+        if record.get("pending"):
+            covered = due.read_up_to() if covered is None else covered
+            if settled(record, covered):
+                del record["pending"]
+                changed = True
+        if not (origin := Path(record.get("transcript") or "").expanduser()).is_file():
+            continue    # gone from Claude Code's store; the archived copy remains
+        stamp = [origin.stat().st_mtime, origin.stat().st_size]
+        if record.get("swept") == stamp:
+            continue    # not a line has been written to it since we last looked
+        copy_transcripts(str(origin), other)
+        lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
+        record["swept"], changed = stamp, True
+        start = record.get("mark", 0) + 1
+        if start > lines:
+            continue    # everything processed, only an empty tail was cut
+        record["pending"] = ref = f"s:{other}#{start}-{lines}"
+        notes.append(f"The session {other} ended before /handoff. Its transcript "
+                     f"has been swept in; the stretch {ref} is unprocessed — run "
+                     f"/handoff for it before taking on anything new.")
+    if changed:
+        save(cwd, state)
+    return "\n".join(notes)
+
+
+def caller(state: dict) -> str:
+    """Which session is running `/handoff`.
+
+    The command is given no session id, and answering with whichever session
+    registered in the folder last handed one session another's reference. The
+    environment the command runs in does carry the id; where it does not, the
+    session appending to its transcript at this very moment is the one that
+    typed the command.
+    """
+    sessions = state.get("sessions") or {}
+    if not sessions:
         return ""
-    if state.get("slug") == slug:
-        return ""   # the same session resumed, nothing was cut short
+    known = slug_for(sessions, os.environ.get("CLAUDE_CODE_SESSION_ID", ""))
+    return known or max(sessions, key=lambda slug: written_at(sessions[slug]))
 
-    origin = Path(state.get("transcript", "")).expanduser()
-    if not origin.is_file():
-        return f"Previous session {state.get('slug')} was cut short; its transcript is missing."
 
-    copy_transcripts(str(origin), state["slug"])
-    lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
-    start = state.get("mark", 0) + 1
-    if start > lines:
-        return ""   # everything processed, only an empty tail was cut
-    ref = f"s:{state['slug']}#{start}-{lines}"
-    pending_of(cwd).write_text(ref, encoding="utf-8")
-    return (f"The previous session was cut short before /handoff. Its transcript "
-            f"has been swept in; the stretch {ref} is unprocessed — run /handoff "
-            f"for it before taking on anything new.")
+def written_at(record: dict) -> float:
+    """When this session last wrote. No transcript is not the current folder."""
+    if not record.get("transcript"):
+        return 0.0
+    try:
+        return Path(record["transcript"]).expanduser().stat().st_mtime
+    except OSError:
+        return 0.0
 
 
 def handoff() -> str:
@@ -243,22 +400,45 @@ def handoff() -> str:
     last line is the mark: the range between two calls defines the stretch
     without a single guess.
     """
-    current = current_of("")
-    try:
-        state = json.loads(current.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    state = load("")
+    slug = caller(state)
+    if not slug:
         return "this folder has no registered session: SessionStart did not run here"
 
-    origin = Path(state["transcript"]).expanduser()
+    record = state["sessions"][slug]
+    origin = Path(record.get("transcript") or "").expanduser()
     if not origin.is_file():
         return f"transcript not found: {origin}"
 
-    copy_transcripts(state["transcript"], state["slug"])
+    copy_transcripts(str(origin), slug)
     lines = sum(1 for _ in origin.open(encoding="utf-8", errors="ignore"))
-    start, state["mark"] = state["mark"] + 1, lines
-    current.write_text(json.dumps(state), encoding="utf-8")
-    pending_of("").unlink(missing_ok=True)
-    return f"s:{state['slug']}#{start}-{lines}"
+    start = record.get("mark", 0) + 1
+    if start > lines:
+        # A reference to nothing would read as `#962-961`, and the agent writes
+        # whatever it is handed into the memory as a source.
+        return f"nothing has been written since the last handoff, at line {lines}"
+
+    record["mark"] = lines
+    record.pop("pending", None)
+    save("", state, slug)
+    return f"s:{slug}#{start}-{lines}"
+
+
+def mark_ended() -> None:
+    """Records that a session is over, so its tail can be swept in safely.
+
+    Without it, the only way to tell a dead session from one waiting in
+    another window is how long its transcript has been silent — a guess this
+    turns into a fact for every session that closes in the ordinary way.
+    """
+    event = read_event()
+    cwd = event.get("cwd", "")
+    state = load(cwd)
+    slug = slug_for(state["sessions"], event.get("session_id", ""))
+    if not slug:
+        return
+    state["sessions"][slug]["ended"] = True
+    save(cwd, state)
 
 
 # ===== Sweeping =====
@@ -311,12 +491,16 @@ def main() -> None:
     if "--handoff" in sys.argv:
         print(handoff())
         return
+    if "--ended" in sys.argv:
+        mark_ended()
+        return
 
     event = read_event()
     today = date.today()
-    slug = session_slug(event.get("session_id", ""), today)
-
     cwd = event.get("cwd", "")
+    session_id = event.get("session_id", "")
+    slug = slug_for(load(cwd)["sessions"], session_id) or session_slug(session_id, today)
+
     message = unfinished(slug, cwd)
     mark_foreign_drift(slug, cwd)          # before remember(): it overwrites the slug
     project = project_name(cwd)
