@@ -62,6 +62,12 @@ Setting `cleanupPeriodDays: 0` is not an option: the documentation calls it "nev
 
 `due.py` derives every obligation from what is already on disk, so nothing new is bookkept. A level is owed material when the level below carries a session it has never seen and enough of the project's sessions have passed since. The audit counts sessions against the id in `audit.md`. The map is stale when an article is newer than it. `SessionStart` prints them all.
 
+**Considered and declined is an outcome, and it is written down.** Weight is often too low to promote anything, and that verdict has to close the debt or the debt is noise. It closes it the same way every debt here closes — by appearing in the memory: the upper level names the sessions it weighed on a `<!-- considered: s:… -->` line, and they stop being unseen, because sources are read from the whole file and not only from its lines. Bare ids there, never a `#range`: a range reads as a stretch somebody wrote up, and would clear a handoff debt nobody paid.
+
+A level *holds* what its lines cite and has *seen* that plus what it declined, and only the second reading counts the verdict. Read the other way round, a decline travels upward as material the level above has never received — while no line up there carries it, so there is nothing to weigh and no way to answer.
+
+The alternative was tried: infer the decision from the file being newer than the one below. It was worse than nothing. `score-memory.py` rewrote every scored level on each run, so the step the working order puts **first** discharged every consolidation debt in the store before anyone had looked at a single line — and the store then reported itself as owing nothing. A timestamp is a proxy for having decided; the decision is the record, and only the record can stand in for it.
+
 **Why this way.** A debt is the agent's, so it is put in front of the agent — on [`UserPromptSubmit`](https://code.claude.com/docs/en/hooks#userpromptsubmit), whose stdout reaches the context, on **every** turn until the debt is gone. The pressure is not in blocking once but in arriving every time: a notice said once at session start is exactly what this replaces.
 
 Once is not enough, though: a turn told at its start still ends however it likes. [`Stop`](https://code.claude.com/docs/en/hooks#stop) is the one point where the answer is written and the debt is still there, so it sends the turn back — the work gets done, or the answer says it was left. `stop_hook_active` marks a turn already returned once, because blocking twice is not pressure but a hang.
@@ -122,7 +128,7 @@ Four possible states, the exits of the verdict: `observation`, `fact`, `rule`, `
 
 **Why this way.** Sources let you trace where the content came from. They do not let you trace what the system did with it — and that is needed to see oscillation between fact and observation, and to know that a rule already failed once and came back.
 
-The comment is stripped before the context, so the bookkeeping is free.
+The comment is markup: a notes editor renders it away, so the bookkeeping stays out of sight while you read the record. It is not free for the agent, which reads the file raw — which is why it is one line and holds the moves and nothing else.
 
 **Why not otherwise.** A separate move journal would have to be linked to the records, and there is nothing to link by. Keeping it on the record itself solves that without a single new structure.
 

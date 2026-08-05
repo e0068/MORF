@@ -418,5 +418,98 @@ class StateWrittenBeforeTheIndex(Vault):
         self.assertEqual(self.state()["mark"], 12)
 
 
+class AVerdictIsTheRecord(Vault):
+    """Considered and declined closes the debt only once it is written down.
+
+    It used to close on the upper level being newer than the lower one, and
+    `score-memory.py` rewrites every scored level on every run — so the step
+    the working order puts first discharged every consolidation debt in the
+    store before a line had been looked at.
+    """
+
+    def levels(self, held: str, lifted: str, sessions: int = 1) -> tuple[Path, Path]:
+        """An inbox citing a session the level above has never seen.
+
+        `sessions` registers that many, because a cadence is counted in them:
+        `L1 → L2` is owed only after five, so a one-session vault answers "no
+        debt" whatever the levels hold, and a test built on it proves nothing.
+        """
+        for number in range(sessions):
+            # The slug is the first four characters of the id, so a shared
+            # prefix would register one session however many are started.
+            session = f"{number:04d}abcd-0000-0000-0000-000000000000"
+            self.write(session, 10)
+            self.start(session)
+        folder = self.vault / "Memory" / "sample"
+        folder.mkdir(parents=True, exist_ok=True)
+        inbox, above = folder / "L0.md", folder / "L1.md"
+        inbox.write_text(f"---\nname: sample-L0\n---\n\n- hit:1 use:0 seen below ({held})\n",
+                         encoding="utf-8")
+        above.write_text(f"---\nname: sample-L1\n---\n\n- hit:3 use:1 lifted ({lifted})\n",
+                         encoding="utf-8")
+        return inbox, above
+
+    def test_rescoring_does_not_discharge_the_debt(self) -> None:
+        self.levels("s:260801-aaaa", "s:260801-bbbb")
+        self.assertIn("L0 → L1", self.debts())
+        self.run_script(SCRIPTS / "score-memory.py")
+        self.assertIn("L0 → L1", self.debts(),
+                      "recomputing the scores answered for a decision nobody made")
+
+    def test_the_considered_line_discharges_it(self) -> None:
+        _, above = self.levels("s:260801-aaaa", "s:260801-bbbb")
+        self.assertIn("L0 → L1", self.debts())
+        above.write_text(above.read_text(encoding="utf-8")
+                         + "\n<!-- considered: s:260801-aaaa -->\n", encoding="utf-8")
+        self.assertNotIn("L0 → L1", self.debts(),
+                         "a weighed session was still reported as never lifted")
+
+    def test_a_verdict_is_not_a_stretch_that_was_read(self) -> None:
+        """The record lives in the files the stretch scan reads, so it is skipped.
+
+        A range copied into it would pass for a stretch written up and clear a
+        handoff debt nobody paid — the defect this whole mechanism replaces,
+        arriving through the other door.
+        """
+        session = "ffff3333-0000-0000-0000-000000000000"
+        self.write(session, 30)
+        self.start(session)
+        self.end(session)
+        self.start("9999333a-0000-0000-0000-000000000000")
+        self.assertIn("archived and unread", self.debts())
+
+        folder = self.vault / "Memory" / "sample"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "L1.md").write_text(
+            f"---\nname: sample-L1\n---\n\n<!-- considered: s:{self.slug(session)}#1-30 -->\n",
+            encoding="utf-8")
+        self.assertIn("archived and unread", self.debts(),
+                      "a verdict passed for the stretch having been written up")
+
+    def test_a_declined_session_does_not_climb_to_the_next_level(self) -> None:
+        """What a level holds is what its lines cite, not what it looked at.
+
+        The level above holds no line of its own here, so it has nothing to
+        offer further up — and the debt that used to appear named a session
+        no line up there carried, which left nothing to weigh.
+        """
+        _, above = self.levels("s:260801-aaaa", "s:260801-bbbb", sessions=8)
+        self.assertIn("L0 → L1", self.debts())
+        above.write_text("---\nname: sample-L1\n---\n\n"
+                         "<!-- considered: s:260801-aaaa -->\n", encoding="utf-8")
+        owed = self.debts()
+        self.assertNotIn("L0 → L1", owed, "a weighed session was still owed below")
+        self.assertNotIn("L1 → L2", owed,
+                         "a decline was offered upward as material no line carries")
+
+    def test_a_level_that_did_not_move_is_not_rewritten(self) -> None:
+        _, above = self.levels("s:260801-aaaa", "s:260801-bbbb")
+        self.run_script(SCRIPTS / "score-memory.py")     # writes the scores in
+        settled = above.stat().st_mtime_ns
+        self.run_script(SCRIPTS / "score-memory.py")     # nothing left to change
+        self.assertEqual(above.stat().st_mtime_ns, settled,
+                         "a file with nothing to write was written anyway")
+
+
 if __name__ == "__main__":
     unittest.main()
