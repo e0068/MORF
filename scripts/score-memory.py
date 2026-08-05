@@ -39,9 +39,15 @@ DEFAULTS = {
     "limits": [40, 30, 25, 20],
 }
 
+# Every counter is optional: the skill tells a writer to omit zeros, and a
+# line written that way used to match nothing — the run then reported "0
+# rescored", which is also what a correct run reports when there is nothing
+# to do. The writer below still emits hit and use in full, so generated
+# lines and hand-written ones both parse.
 LINE_RE = re.compile(
     r"^(?P<head>- (?:↑ )?)"
-    r"hit:(?P<hit>\d+) use:(?P<use>\d+)(?: miss:(?P<miss>\d+))?(?: inverse:(?P<inverse>\d+))?"
+    r"(?:hit:(?P<hit>\d+) ?)?(?:use:(?P<use>\d+) ?)?"
+    r"(?:miss:(?P<miss>\d+) ?)?(?:inverse:(?P<inverse>\d+) ?)?"
     r"(?: \[[^\]]*\])?"
     r"(?P<text>.+?)"
     r"\((?P<sources>s:[^)]*)\)\s*$"
