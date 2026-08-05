@@ -16,6 +16,13 @@ A level is owed material when the level below it carries a session the
 level above has never seen, and enough of this project's sessions have
 passed since. The audit counts sessions since the id in `audit.md`.
 
+Considered and declined is a legitimate outcome — weight is often too low to
+promote anything — and it discharges the debt the way every debt here does:
+by being written down. The level names what it weighed on a `<!-- considered:
+s:… -->` line, and a session named there is one it has seen. Inferring the
+decision from the file's timestamp instead was worse than nothing; the
+reasoning is in `Docs/foundation.md`.
+
     python3 due.py            what the current folder's project owes
     python3 due.py --all      every project
     python3 due.py --prompt   the same, addressed to the agent, on every turn
@@ -44,6 +51,11 @@ NOT_PROJECTS = ("Transcripts", "Scripts", ".state")
 
 SOURCE_RE = re.compile(r"s:(\d{6}-\w+)")
 STRETCH_RE = re.compile(r"s:(\d{6}-\w+)#(\d+)-(\d+)")
+# The verdict line, on its own line and nowhere else. It records what a level
+# weighed, which is not the same as what the memory has read: left in place it
+# would let a session named there pass for a stretch written up, and discharge
+# a handoff debt nobody paid.
+CONSIDERED_RE = re.compile(r"^[ \t]*<!--\s*considered:.*?-->[ \t]*$", re.M)
 ROW_RE = re.compile(r"^\|\s*s:(?P<id>[\w-]+)\s*\|[^|]*\|\s*(?P<project>[^|]*?)\s*\|")
 LAST_RE = re.compile(r"^last:\s*(\S+)", re.MULTILINE)
 
@@ -90,11 +102,21 @@ def after(project: str, marker: str) -> int:
     return sum(1 for _, owner in seen[at + 1:] if owner == project)
 
 
-def sources(path: Path) -> set[str]:
+def sources(path: Path, weighed: bool = True) -> set[str]:
+    """The sessions a level file names, verdict line included or not.
+
+    A level *holds* what its lines cite; it has *seen* that plus what it
+    weighed and declined. The two are not interchangeable. The level above
+    must count a decline as seen, or the verdict closes nothing. The level
+    below must not offer it as material, or a decline travels upward as
+    something the next level has never received — and no line up there
+    carries it, so there would be nothing to weigh.
+    """
     try:
-        return set(SOURCE_RE.findall(path.read_text(encoding="utf-8")))
+        text = path.read_text(encoding="utf-8")
     except OSError:
         return set()
+    return set(SOURCE_RE.findall(text if weighed else CONSIDERED_RE.sub("", text)))
 
 
 def elapsed(project: str, since: set[str]) -> int:
@@ -113,14 +135,8 @@ def consolidation(project: str) -> list[str]:
     step = config("horizon_step", 5)
     for i in range(len(levels) - 1):
         lower, upper = MEMORY / project / f"{levels[i]}.md", MEMORY / project / f"{levels[i + 1]}.md"
-        unseen = sources(lower) - sources(upper)
+        unseen = sources(lower, weighed=False) - sources(upper)
         if not unseen:
-            continue
-        # Considered and declined is a legitimate outcome — weight can be too
-        # low to promote anything. Without this the debt would stand forever,
-        # since the sessions below never become sessions above. Whoever looks
-        # writes the upper file back, changed or not, and that is the record.
-        if upper.exists() and lower.stat().st_mtime <= upper.stat().st_mtime:
             continue
         # The cadence of the level being filled: levels.md gives L1 after 1
         # session, L2 after 5, L3 after 25 — that is base * step ** i.
@@ -204,7 +220,7 @@ def read_up_to() -> dict[str, int]:
                 text = (folder / f"{stem}.md").read_text(encoding="utf-8")
             except OSError:
                 continue
-            for slug, _, end in STRETCH_RE.findall(text):
+            for slug, _, end in STRETCH_RE.findall(CONSIDERED_RE.sub("", text)):
                 highest[slug] = max(highest.get(slug, 0), int(end))
     return highest
 

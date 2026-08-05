@@ -94,9 +94,11 @@ The same version split observations into two pools, project and general, with a 
 <!-- moves: s:260901-aa11 fact, s:261102-bb22 observation -->
 ```
 
-Zero counters are omitted. The scores in square brackets are written by the script. The comment holding the move history is stripped before the context, so it costs nothing.
+Zero counters are omitted. The scores in square brackets are written by the script. The comment holding the move history is markup: invisible in a notes editor, one line to the agent that reads the file raw.
 
 A source points not only at a session but at a stretch inside it: `s:260803-a41f#412-980`. The line numbers come from `archive-session.py --handoff` — at that moment the copy ends exactly where the piece of work ended.
+
+A level file may carry one more comment, and it belongs to the file rather than to any line: `<!-- considered: s:260801-aaaa s:260801-bbbb -->`, the sessions this level weighed and declined — see [[foundation]]. Bare ids there, never a `#range`: a range reads as a stretch someone wrote up.
 
 **Why this way.** A line without sources is invalid and is discarded during consolidation: `/morf:why`, the time scale and the very possibility of disputing a record all rest on sources.
 
