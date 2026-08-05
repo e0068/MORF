@@ -92,7 +92,7 @@ One entrance and one exit, both through memory: a rule is derived from a mature 
 
 ### [[foundation]]
 
-The conversation archive and why the copy is permanent rather than a reference to Claude Code's store. The session index, which doubles as the time scale of the whole model. `/morf:why` — how to get from any line back to the conversation. The split of settings: numbers for the code, instructions for the agent. The `/morf:audit` every tenth session. And what stays outside the system: tasks.
+The conversation archive and why the copy is permanent rather than a reference to Claude Code's store. The session index, which doubles as the time scale of the whole model. `/morf:why` — how to get from any line back to the conversation. The split of settings: numbers for the code, instructions for the agent. The `/morf:audit` every tenth session — the balancer that keeps the flow present and varied. And what stays outside the system: tasks.
 
 ### [[setup]]
 
