@@ -32,7 +32,6 @@ import morf
 
 # ===== Settings =====
 
-HOME = morf.home()
 MEMORY = morf.memory()
 TRANSCRIPTS = MEMORY / "Transcripts"
 SESSIONS = MEMORY / "sessions.md"
@@ -74,23 +73,25 @@ def project_key(cwd: str) -> str:
     the folder it runs in — so the folder is what the *file* is named by. What
     it holds is an index of sessions, not one record.
     """
-    path = Path(cwd).expanduser() if cwd else Path.cwd()
-    return str(path).strip("/").replace("/", "-") or "root"
+    return morf.slot(cwd)
 
 
 def current_of(cwd: str) -> Path:
     return STATE / f"{project_key(cwd)}.json"
 
 
-def project_name(cwd: str) -> str:
-    """Project name from the working folder.
+def record_project(name: str) -> None:
+    """Persist the agent's judgement of which project this session feeds.
 
-    A dash for MORF itself and for the home directory: a session started in
-    `~` is not working on a project called after the account, and shelves
-    built for it collect sessions that belong to no memory at all.
+    `morf.project` reads this before anything else, so the shelves, the scale
+    and the debt follow the relation the agent named rather than the folder
+    name standing in for it. Written into the same slot state the index keeps,
+    and touching nothing else it holds.
     """
-    path = Path(cwd) if cwd else Path.cwd()
-    return "—" if path in (HOME, Path.home()) else path.name
+    cwd = os.getcwd()
+    state = load(cwd)
+    state["project"] = name
+    save(cwd, state)
 
 
 # ===== Actions =====
@@ -488,6 +489,11 @@ def mark_foreign_drift(slug: str, cwd: str) -> None:
 
 
 def main() -> None:
+    if "--project" in sys.argv:
+        named = sys.argv[sys.argv.index("--project") + 1:]
+        if named:
+            record_project(named[0])
+        return
     if "--handoff" in sys.argv:
         print(handoff())
         return
@@ -503,7 +509,7 @@ def main() -> None:
 
     message = unfinished(slug, cwd)
     mark_foreign_drift(slug, cwd)          # before remember(): it overwrites the slug
-    project = project_name(cwd)
+    project = morf.project(cwd)
     append_row(slug, today, project)
     prepare(project)
     remember(slug, event.get("transcript_path", ""), cwd)

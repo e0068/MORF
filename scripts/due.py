@@ -284,11 +284,13 @@ def as_instruction() -> None:
     except (json.JSONDecodeError, ValueError):
         return
     cwd = event.get("cwd") or str(Path.cwd())
-    debts = owed(Path(cwd).name, cwd)
+    debts = owed(morf.project(cwd), cwd)
     if not debts:
         return
     print("MORF: this project owes work on its memory, and it is yours to do, "
-          "not the owner's to ask for. Discharge it before answering:")
+          "not the owner's to ask for. Load the morf skill and discharge each "
+          "before answering — /morf:handoff for a stretch, its consolidation "
+          "steps for the levels:")
     for text in debts:
         print(f"  - {text}")
 
@@ -311,12 +313,13 @@ def as_refusal() -> None:
     if event.get("stop_hook_active"):
         return
     cwd = event.get("cwd") or str(Path.cwd())
-    debts = owed(Path(cwd).name, cwd)
+    debts = owed(morf.project(cwd), cwd)
     if not debts:
         return
-    print("MORF: this turn cannot end while the memory is owed work. Discharge it, "
-          "or say plainly in the answer that you are leaving it:\n  - "
-          + "\n  - ".join(debts), file=sys.stderr)
+    print("MORF: this turn cannot end while the memory is owed work. Load the morf "
+          "skill and discharge it — /morf:handoff for a stretch, its consolidation "
+          "steps for the levels — or say plainly in the answer that you are leaving "
+          "it:\n  - " + "\n  - ".join(debts), file=sys.stderr)
     sys.exit(2)
 
 

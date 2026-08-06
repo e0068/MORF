@@ -7,9 +7,22 @@ Reconcile what happened with what the system predicted.
    If the session start reported an unfinished stretch, use its reference
    instead — the copy for it is already archived.
 
+   Then record which project this session feeds:
+   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/archive-session.py --project <name>`.
+   The folder you run in is a slot, not the project — a worktree feeds the
+   project it is work on, not one named after the task. This is the shelf you
+   write the lines below onto; naming it here is what makes the debt, the
+   scale and the notice find the same project you did.
+
 2. Expected outcomes are counters on existing lines; add no new lines for them:
    `hit` the prediction held · `use` the line changed what you did ·
    `miss` the prediction did not hold · `inverse` the opposite happened.
+
+   Credit a `hit` or `use` only for a line that acted independently of your
+   reading it. A line you loaded at start, quoted, or built on this session is
+   suspect: a fresh confirmation may be your own attention echoing back. Credit
+   it only when the situation held or the decision turned on it on its own
+   terms; in doubt, leave the counter and name the line in the observation.
 
    `inverse` also creates a new line: the opposite is itself unexpected.
    A refutation matters more than a new finding — never skip it for brevity.
