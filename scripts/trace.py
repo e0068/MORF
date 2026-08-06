@@ -30,6 +30,7 @@ import json
 import re
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
@@ -358,7 +359,9 @@ def build(before: dict, now: dict, always: bool, link: bool) -> str:
     header = f"| Shelf | {' | '.join(cols)} |"
     ruler = "|" + "---|" * (len(cols) + 1)
     title = "MORF — what moved this session" if moved else "MORF memory"
-    out = [title, "", header, ruler, *rows]
+    # The one line not derived from disk: the moment this view was drawn —
+    # metadata about the rendering, not a claim about what moved.
+    out = [title, f"_{datetime.now().strftime('%Y-%m-%d %H:%M')}_", "", header, ruler, *rows]
 
     rtx = rule_texts() if rules_added else {}
     blocks = sections(before, now, stirred) + [b for b in (
