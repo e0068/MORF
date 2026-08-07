@@ -135,6 +135,5 @@ the reasoning is in `MORF/Docs/`.
 
 ## Language
 
-Imperatives in English: these instructions, commands, rules, agent definitions.
-Everything in the indicative — observations, fact articles, and your replies
-to me — in the language set in the `CLAUDE.md` next to MORF.
+English — the MORF machinery itself: these instructions, commands, hooks, agent definitions.
+Everything else — observations, rules, fact articles, and your replies to me — in the language set in the `CLAUDE.md` next to MORF.

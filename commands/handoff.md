@@ -45,7 +45,7 @@ Reconcile what happened with what the system predicted.
 
 4. If a conclusion about how to act formed during the work, do not discard it.
    Record the observation in the indicative, mark it `↑`, and attach the
-   proposed rule wording below it, in English.
+   proposed rule wording below it, in Russian.
 
 5. A fact article that took part in a decision gets `applied` raised in its
    front matter — the same event `use` records for an observation. If it is
