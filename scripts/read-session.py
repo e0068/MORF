@@ -26,7 +26,7 @@ import morf
 
 # ===== Settings =====
 
-TRANSCRIPTS = morf.memory() / "Transcripts"
+TRANSCRIPTS = morf.home() / "Transcripts"
 CONTEXT_LINES = 2
 MAX_CHARS = 600
 

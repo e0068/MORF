@@ -20,8 +20,8 @@ import morf
 # ===== Settings =====
 
 FACTS = morf.facts()
-INDEX_FILE = morf.memory() / "INDEX.md"
-TAGS_FILE = morf.memory() / "TAGS.md"
+INDEX_FILE = morf.home() / "INDEX.md"
+TAGS_FILE = morf.home() / "TAGS.md"
 FIELDS = ("type", "description", "tags", "scope", "applied")
 TAG_FILES_SHOWN = 12
 

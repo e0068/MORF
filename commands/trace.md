@@ -1,19 +1,20 @@
 Show what moved in memory, as a matrix read from disk rather than a claim.
 
-1. Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/trace.py --show` and show me its
-   output as it comes — a markdown table, one row per shelf, one column per
-   level. The point of the matrix is that it is the disk, not your account of
-   it: add nothing, drop nothing, restate nothing.
+1. Run `python3 "$CLAUDE_PROJECT_DIR/.morf/scripts/trace.py" --show` and show me its
+   output as it comes — a markdown table: one `.morf` is one memory, so the
+   memory is a single row, one column per level. The point of the matrix is
+   that it is the disk, not your account of it: add nothing, drop nothing,
+   restate nothing.
 
 2. Read a cell as `count (+in −out)`: the standing count at the round's end, and
    in brackets what the round added and took away. A bare number is a cell that
    did not move. `Facts` and `Rules` ride the same table as their own rows — a
    count and, when it changes, `(+in −out)`.
 
-3. In `Memory/TRACE.md` the cell is split into clicks, so open that note in
+3. In `.morf/TRACE.md` the cell is split into clicks, so open that note in
    Obsidian: the **count** links to the level's own file (the whole list), the
    **`(+in −out)`** to a heading that names exactly what arrived (`←`) and left
-   (`→`) this round, and the **name** to the shelf's inbox file. `TRACE.md` is
+   (`→`) this round, and the **name** to the memory's inbox file. `TRACE.md` is
    generated; never edit it.
 
 4. `--show` renders whether or not anything moved. The same render prints itself

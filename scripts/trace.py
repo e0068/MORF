@@ -10,17 +10,19 @@ moved only because it now sits in a different file than it did.
 
 Identity survives a move. Consolidation strips and rewrites `[S= R= t=]`, but a
 line keeps its text and its sources across every promotion, return and drop. So
-two readings keyed on (text, sources) tell, per shelf and per level, what
-arrived and what left — `count (+in −out)` in a cell, state and movement at once.
-Facts and Rules diff the same way and ride the same table as their own rows.
+two readings keyed on (text, sources) tell, per level, what arrived and what
+left — `count (+in −out)` in a cell, state and movement at once. One `.morf` is
+one memory, so the table is a single row; Facts and Rules diff the same way and
+ride it as their own rows.
 
     trace.py --mark      snapshot the baseline (SessionStart)
     trace.py --report    against the baseline, if it moved (Stop)
     trace.py --show       always, moved or not (the command)
 
 Each render goes two ways: printed plain for the chat, and written to
-`Memory/TRACE.md` with each stirred cell a markdown link to its own heading, so
-the matrix is clickable inside Obsidian — a cell lands on the lines behind it.
+`TRACE.md` at the home root with each stirred cell a markdown link to its own
+heading, so the matrix is clickable inside Obsidian — a cell lands on the lines
+behind it.
 
 No dependencies beyond the standard library.
 """
@@ -36,11 +38,12 @@ from urllib.parse import quote
 
 import morf
 
-MEMORY = morf.memory()
+OBSERVATIONS = morf.observations()
+DROPPED = morf.home() / "dropped.md"
 FACTS = morf.facts()
 STATE = morf.state()
 RULES_MAP = morf.home() / "Rules" / "map.md"
-NOTE = MEMORY / "TRACE.md"               # generated view, clickable inside Obsidian
+NOTE = morf.home() / "TRACE.md"          # generated view, clickable inside Obsidian
 CONFIG_FILE = Path(__file__).with_name("config.json")
 
 # The counters and the score block are rewritten in place, so neither may enter
@@ -66,21 +69,14 @@ def config(key, fallback):
 
 
 def columns() -> list[str]:
-    """The levels, then the one shelf that has no limit and no return."""
+    """The levels, then the one channel that has no limit and no return."""
     return config("levels", ["L0", "L1", "L2", "L3"]) + ["dropped"]
 
 
-def shelves() -> list[str]:
-    """Folders under Memory that carry the first level file. The session index
-    also names throwaway cwds; a shelf is the folder with the files."""
-    first = columns()[0]
-    skip = {"Transcripts", "Scripts", ".state"}
-    try:
-        return sorted(p.name for p in MEMORY.iterdir()
-                      if p.is_dir() and p.name not in skip
-                      and (p / f"{first}.md").is_file())
-    except OSError:
-        return []
+def level_path(column: str) -> Path:
+    """The file behind a column: the levels live in `Observations/`, `dropped`
+    at the root. One `.morf` is one memory, so there is no shelf to choose."""
+    return DROPPED if column == "dropped" else OBSERVATIONS / f"{column}.md"
 
 
 def identity(line: str) -> str | None:
@@ -97,10 +93,10 @@ def identity(line: str) -> str | None:
     return hashlib.sha1(key.encode("utf-8")).hexdigest()
 
 
-def cell(shelf: str, column: str) -> Counter:
-    """The line identities in one shelf-level file, as a multiset."""
+def cell(column: str) -> Counter:
+    """The line identities in one level file, as a multiset."""
     try:
-        lines = (MEMORY / shelf / f"{column}.md").read_text(encoding="utf-8").splitlines()
+        lines = level_path(column).read_text(encoding="utf-8").splitlines()
     except OSError:
         return Counter()
     return Counter(h for h in (identity(line) for line in lines) if h)
@@ -141,7 +137,7 @@ def snapshot() -> dict:
     """The whole of memory as identities — the baseline, kept as hashes and
     paths so no line's text is copied out of the folder."""
     return {
-        "shelves": {s: {c: dict(cell(s, c)) for c in columns()} for s in shelves()},
+        "levels": {c: dict(cell(c)) for c in columns()},
         "facts": fact_ids(),
         "rules": rule_ids(),
     }
@@ -167,13 +163,13 @@ def load_baseline(cwd: str) -> dict | None:
 
 # ===== The matrix =====
 
-def side(reading: dict, shelf: str, column: str) -> Counter:
-    return Counter((reading.get("shelves", {}).get(shelf) or {}).get(column, {}))
+def side(reading: dict, column: str) -> Counter:
+    return Counter((reading.get("levels") or {}).get(column, {}))
 
 
-def flow(before: dict, now: dict, shelf: str, column: str) -> tuple[int, int, int]:
-    """(arrived, held now, left) for one cell — pure multiset difference."""
-    was, has = side(before, shelf, column), side(now, shelf, column)
+def flow(before: dict, now: dict, column: str) -> tuple[int, int, int]:
+    """(arrived, held now, left) for one column — pure multiset difference."""
+    was, has = side(before, column), side(now, column)
     return sum((has - was).values()), sum(has.values()), sum((was - has).values())
 
 
@@ -192,20 +188,20 @@ def cell_body(arrived: int, count: int, left: int) -> str:
 
 # ===== Which lines moved =====
 
-def locations(reading: dict, shelf: str) -> dict[str, str]:
-    """hash → the column it sits in, for one shelf in one reading."""
-    return {h: col for col, counts in (reading.get("shelves", {}).get(shelf) or {}).items()
+def locations(reading: dict) -> dict[str, str]:
+    """hash → the column it sits in, for one reading of the memory."""
+    return {h: col for col, counts in (reading.get("levels") or {}).items()
             for h in counts}
 
 
-def line_texts(shelf: str) -> dict[str, str]:
-    """hash → readable text, recovered from the shelf as it stands now. Nothing
+def line_texts() -> dict[str, str]:
+    """hash → readable text, recovered from the memory as it stands now. Nothing
     is ever deleted, so a line that left a cell still sits in the one it entered
     — its text is on disk to be read, and none of it is kept in the baseline."""
     texts = {}
     for column in columns():
         try:
-            lines = (MEMORY / shelf / f"{column}.md").read_text(encoding="utf-8").splitlines()
+            lines = level_path(column).read_text(encoding="utf-8").splitlines()
         except OSError:
             continue
         for line in lines:
@@ -215,11 +211,11 @@ def line_texts(shelf: str) -> dict[str, str]:
     return texts
 
 
-def moves_of(before: dict, now: dict, shelf: str) -> list[tuple]:
-    """(origin, dest, hash) for every line that changed column in one shelf.
+def moves_of(before: dict, now: dict) -> list[tuple]:
+    """(origin, dest, hash) for every line that changed column.
     `origin` is None for a birth (a fresh observation, a returned rule); `dest`
     is None only for the impossible vanish, since nothing is ever deleted."""
-    was, has = locations(before, shelf), locations(now, shelf)
+    was, has = locations(before), locations(now)
     return [(was.get(h), has.get(h), h) for h in set(was) | set(has)
             if was.get(h) != has.get(h)]
 
@@ -229,10 +225,10 @@ def clip(text: str, width: int = 100) -> str:
     return f"«{text[:width]}…»" if len(text) > width else f"«{text}»"
 
 
-def anchor(shelf: str, column: str) -> str:
-    """The heading a cell links to — one per shelf-level, so a click lands on
-    exactly the lines behind that cell."""
-    return f"{shelf} · {column}"
+def anchor(column: str) -> str:
+    """The heading a cell links to — one per level, so a click lands on exactly
+    the lines behind that cell."""
+    return f"memory · {column}"
 
 
 def note_link(head: str, text: str) -> str:
@@ -243,40 +239,44 @@ def note_link(head: str, text: str) -> str:
     return f"[{text}](#{quote(head)})"
 
 
-def cell_link(shelf: str, column: str, arrived: int, count: int, left: int) -> str:
+def column_target(column: str) -> str:
+    """The level's own file, relative to `TRACE.md` at the home root: the levels
+    sit in `Observations/`, `dropped.md` beside the note."""
+    return "dropped.md" if column == "dropped" else f"Observations/{column}.md"
+
+
+def cell_link(column: str, arrived: int, count: int, left: int) -> str:
     """The cell for the note, split so state and change are separate clicks: the
     count opens the whole list (the level's own file), the `(+in −out)` jumps to
     the heading that names exactly what moved this round."""
-    whole = f"[{count}]({quote(shelf)}/{column}.md)" if count else "0"
+    whole = f"[{count}]({column_target(column)})" if count else "0"
     change = change_str(arrived, left)
-    return f"{whole} ({note_link(anchor(shelf, column), change)})" if change else whole
+    return f"{whole} ({note_link(anchor(column), change)})" if change else whole
 
 
-def sections(before: dict, now: dict, stirred: list[str]) -> list[str]:
-    """Per shelf a `### {shelf}` heading, and under it a `#### {shelf} · {col}`
-    per moved cell, listing the lines that arrived (`←`) and left (`→`). Both are
-    same-note anchors, so a shelf name and a cell each land on their own lines.
-    `dropped` gathers every channel into its one heading."""
-    blocks = []
-    for shelf in stirred:
-        texts = line_texts(shelf)
-        cells: dict[str, dict[str, list]] = {}
-        for origin, dest, h in moves_of(before, now, shelf):
-            if dest is not None:
-                cells.setdefault(dest, {}).setdefault("in", []).append((origin, h))
-            if origin is not None:
-                cells.setdefault(origin, {}).setdefault("out", []).append((dest, h))
-        part = [f"### {shelf}"]
-        for column in columns():
-            if column not in cells:
-                continue
-            part.append(f"#### {anchor(shelf, column)}")
-            for origin, h in cells[column].get("in", []):
-                part.append(f"- ← {origin or 'new'}: {clip(texts.get(h, '(text gone)'))}")
-            for dest, h in cells[column].get("out", []):
-                part.append(f"- → {dest or 'gone'}: {clip(texts.get(h, '(text gone)'))}")
-        blocks.append("\n".join(part))
-    return blocks
+def sections(before: dict, now: dict) -> list[str]:
+    """A `#### memory · {col}` heading per moved level, listing the lines that
+    arrived (`←`) and left (`→`). Each is a same-note anchor, so a cell lands on
+    its own lines. `dropped` gathers every channel into its one heading."""
+    texts = line_texts()
+    cells: dict[str, dict[str, list]] = {}
+    for origin, dest, h in moves_of(before, now):
+        if dest is not None:
+            cells.setdefault(dest, {}).setdefault("in", []).append((origin, h))
+        if origin is not None:
+            cells.setdefault(origin, {}).setdefault("out", []).append((dest, h))
+    if not cells:
+        return []
+    part = ["### memory"]
+    for column in columns():
+        if column not in cells:
+            continue
+        part.append(f"#### {anchor(column)}")
+        for origin, h in cells[column].get("in", []):
+            part.append(f"- ← {origin or 'new'}: {clip(texts.get(h, '(text gone)'))}")
+        for dest, h in cells[column].get("out", []):
+            part.append(f"- → {dest or 'gone'}: {clip(texts.get(h, '(text gone)'))}")
+    return ["\n".join(part)]
 
 
 def deltas(before_ids, now_ids: list[str]) -> tuple[list[str], list[str]]:
@@ -320,43 +320,38 @@ def tally_section(name: str, added: list[str], removed: int, gone: str) -> str |
 
 
 def build(before: dict, now: dict, always: bool, link: bool) -> str:
-    """The matrix as a markdown table — a shelf per row, a level per column, the
-    cell `count (+in −out)` — with Facts and Rules appended as their own rows.
-    `link` turns every moved cell and name into a same-note markdown link, and
-    under the table a heading per one lists exactly the lines behind it."""
+    """The matrix as a markdown table — the one memory as a row, a level per
+    column, the cell `count (+in −out)` — with Facts and Rules appended as their
+    own rows. `link` turns every moved cell and name into a same-note markdown
+    link, and under the table a heading per one lists the lines behind it."""
     cols = columns()
-    names = sorted(set(now["shelves"]) | set(before.get("shelves", {})))
 
-    moved, rows, stirred = False, [], []
-    for shelf in names:
-        cells, alive, stir = [], False, False
-        for column in cols:
-            arrived, count, left = flow(before, now, shelf, column)
-            alive = alive or count
-            stir = stir or arrived or left
-            cells.append(cell_link(shelf, column, arrived, count, left) if link
-                         else cell_body(arrived, count, left))
-        moved = moved or stir
-        if stir:
-            stirred.append(shelf)
-        # A shelf empty and unmoved is a throwaway cwd, not a memory — skip it.
-        if alive or stir:
-            # Obsidian will not open a bare folder link, so the name opens the
-            # shelf's inbox file, which reveals the folder and all its levels.
-            first = f"{quote(shelf)}/{columns()[0]}.md"
-            rows.append(f"| {row_label(shelf, first, MEMORY / shelf / f'{columns()[0]}.md', link)} | {' | '.join(cells)} |")
+    cells, alive, moved = [], False, False
+    for column in cols:
+        arrived, count, left = flow(before, now, column)
+        alive = alive or count
+        moved = moved or arrived or left
+        cells.append(cell_link(column, arrived, count, left) if link
+                     else cell_body(arrived, count, left))
+    rows = []
+    if alive or moved:
+        name = morf.project()
+        # Obsidian will not open a bare folder link, so the name opens the
+        # inbox file, which reveals the folder and all its levels.
+        inbox = column_target(cols[0])
+        rows.append(f"| {row_label(name, inbox, OBSERVATIONS / f'{cols[0]}.md', link)} | {' | '.join(cells)} |")
 
     facts_added, facts_removed = deltas(before.get("facts"), now["facts"])
     rules_added, rules_removed = deltas(before.get("rules"), now["rules"])
     rows += [r for r in (
-        tally_row("Facts", "INDEX.md", MEMORY / "INDEX.md", len(now["facts"]), facts_added, facts_removed, link),
-        tally_row("Rules", "../Rules/map.md", RULES_MAP, len(now["rules"]), rules_added, rules_removed, link),
+        tally_row("Facts", "INDEX.md", morf.home() / "INDEX.md", len(now["facts"]), facts_added, facts_removed, link),
+        tally_row("Rules", "Rules/map.md", RULES_MAP, len(now["rules"]), rules_added, rules_removed, link),
     ) if r]
     moved = moved or facts_added or facts_removed or rules_added or rules_removed
     if not moved and not always:
         return ""
 
-    header = f"| Shelf | {' | '.join(cols)} |"
+    header = f"| Memory | {' | '.join(cols)} |"
     ruler = "|" + "---|" * (len(cols) + 1)
     title = "MORF — what moved this session" if moved else "MORF memory"
     # The one line not derived from disk: the moment this view was drawn —
@@ -364,7 +359,7 @@ def build(before: dict, now: dict, always: bool, link: bool) -> str:
     out = [title, f"_{datetime.now().strftime('%Y-%m-%d %H:%M')}_", "", header, ruler, *rows]
 
     rtx = rule_texts() if rules_added else {}
-    blocks = sections(before, now, stirred) + [b for b in (
+    blocks = sections(before, now) + [b for b in (
         tally_section("Facts", [f"`{p}`" for p in facts_added], len(facts_removed), "removed"),
         tally_section("Rules", [clip(rtx.get(h, "(text gone)")) for h in rules_added],
                       len(rules_removed), "returned to memory"),

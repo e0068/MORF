@@ -42,7 +42,7 @@
     {
       "id": "archive",
       "type": "text",
-      "text": "**`MORF/Memory/Transcripts/<id>/`**\n\nA folder per session holding all its files, subagent transcripts included.\n\nRaw, never retold. Permanent: never deleted. `.jsonl` is not indexed by note editors.",
+      "text": "**`.morf/Transcripts/<id>/`**\n\nA folder per session holding all its files, subagent transcripts included.\n\nRaw, never retold. Permanent: never deleted. `.jsonl` is not indexed by note editors.",
       "x": 0,
       "y": 782,
       "width": 460,
@@ -51,7 +51,7 @@
     {
       "id": "sessions",
       "type": "text",
-      "text": "**`sessions.md`** — the index\n\n`s:260803-a41f` → date, project, what it was about.\n\nThe order of a project's rows sets the age of events: measured in sessions, not days.",
+      "text": "**`sessions.md`** — the index\n\n`s:260803-a41f` → date, project, what it was about.\n\nThe order of the rows sets the age of events: measured in sessions, not days.",
       "x": 0,
       "y": 1100,
       "width": 460,
@@ -156,7 +156,7 @@
     {
       "id": "cfg",
       "type": "text",
-      "text": "**`Scripts/config.json`**\n\nWeights, scale unit, level step, limits. The levels are published to `levels.md`.",
+      "text": "**`.morf/scripts/config.json`**\n\nWeights, scale unit, level step, limits. The levels are published to `levels.md`.",
       "x": -620,
       "y": 1560,
       "width": 460,
@@ -255,7 +255,7 @@
     {
       "id": "know",
       "type": "text",
-      "text": "**Article about a phenomenon** · `MORF/Facts`\n\nA subject per file, not a fact per file: it gathers observations as they arrive.\n\n```yaml\ndescription, tags\nscope: [project]\napplied: 3\n```\n\nSections by facet, each with its own `s:` sources, and `[[…]]` links to related phenomena.\n\nA repeat adds an `s:` to an existing paragraph; a new section is for a new facet.",
+      "text": "**Article about a phenomenon** · `.morf/Facts`\n\nA subject per file, not a fact per file: it gathers observations as they arrive.\n\n```yaml\ndescription, tags\nscope: [project]\napplied: 3\n```\n\nSections by facet, each with its own `s:` sources, and `[[…]]` links to related phenomena.\n\nA repeat adds an `s:` to an existing paragraph; a new section is for a new facet.",
       "x": 1180,
       "y": 2756,
       "width": 460,
@@ -359,7 +359,7 @@
     {
       "id": "rule_track",
       "type": "text",
-      "text": "**The rule register** · `MORF/Rules/map.md`\n\n`- hit:6 use:4 miss:1 [S=… R=… t=…] do not use X (s:…)`\n\nThe same counters an observation carries, kept inside the contour. Alongside it, per watched file: `*.snap.md` and `*.log.md`.\n\nIn: `S ≥ rulesInScore` and `use/hit ≥ rulesIn`.\nOut: `miss ≥ rulesOutByMiss` or `inverse ≥ rulesOutByInverse`.",
+      "text": "**The rule register** · `.morf/Rules/map.md`\n\n`- hit:6 use:4 miss:1 [S=… R=… t=…] do not use X (s:…)`\n\nThe same counters an observation carries, kept inside the contour. Alongside it, per watched file: `*.snap.md` and `*.log.md`.\n\nIn: `S ≥ rulesInScore` and `use/hit ≥ rulesIn`.\nOut: `miss ≥ rulesOutByMiss` or `inverse ≥ rulesOutByInverse`.",
       "x": 1160,
       "y": 3776,
       "width": 480,

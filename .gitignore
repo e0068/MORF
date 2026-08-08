@@ -24,3 +24,35 @@ htmlcov/
 
 # Сборка
 dist/
+
+# >>> morf (memory data; .morf/scripts,hooks,docs stay committed) >>>
+# A worktree needs .morf/scripts to fire its hooks, so code is committed and
+# only data is ignored. Re-run with --private to commit the whole .morf.
+.morf/Observations/
+.morf/Transcripts/
+.morf/Facts/
+.morf/Rules/
+.morf/.state/
+.morf/sessions.md
+.morf/audit.md
+.morf/levels.md
+.morf/dropped.md
+.morf/INDEX.md
+.morf/TAGS.md
+.morf/TRACE.md
+# <<< morf <<<
+
+# >>> morf self-hosting >>>
+# In MORF's own repository the install output is a byte-identical copy of the
+# source: .morf/scripts of scripts/, .morf/docs of docs/, .claude/commands/morf
+# of commands/, .claude/skills/morf of SKILL.md. Committing both would put two
+# copies of one thing in one repo, and they would drift — the very defect this
+# layout removes. The source is what is tracked; `tools/install.sh` unpacks the
+# rest, and the memory under .morf stays local. Consumer repos commit their
+# .morf/scripts instead: there it is not a duplicate, and a worktree needs it
+# present for its hooks to fire.
+.morf/
+.claude/settings.json
+.claude/commands/morf/
+.claude/skills/morf/
+# <<< morf self-hosting <<<

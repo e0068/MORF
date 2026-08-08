@@ -94,6 +94,10 @@ One entrance and one exit, both through memory: a rule is derived from a mature 
 
 The conversation archive and why the copy is permanent rather than a reference to Claude Code's store. The session index, which doubles as the time scale of the whole model. `/morf:why` — how to get from any line back to the conversation. The split of settings: numbers for the code, instructions for the agent. The `/morf:audit` every tenth session — the balancer that keeps the flow present and varied. And what stays outside the system: tasks.
 
+### [[machinery]]
+
+The operational layer that carries the model: the six hooks and the events they fire on, the triggers that raise work — events, computed debts and guards — the tasks that need an agent's judgment, and the debts the memory owes. Why enforcement arrives every turn and writes to stdout rather than blocking once and discarding the human's prompt.
+
 ### [[setup]]
 
 Steps, command texts, the `CLAUDE.md` template. Nothing of the model is restated there.
@@ -102,7 +106,7 @@ Steps, command texts, the `CLAUDE.md` template. Nothing of the model is restated
 
 | File | What it does |
 |---|---|
-| `archive-session.py` | the hook: session registration, shelves, transcript copies |
+| `archive-session.py` | the hook: session registration, the level files, transcript copies |
 | `due.py` | what the memory owes, on every turn and at the end of one |
 | `score-memory.py` | `S`, `R`, `t` in the memory files, and `levels.md` |
 | `read-session.py` | a readable conversation from the archive, for `/morf:why` |
@@ -110,7 +114,7 @@ Steps, command texts, the `CLAUDE.md` template. Nothing of the model is restated
 | `guard-archive.py` | blocks writes and deletes inside the archive |
 | `rules.py` | the register, the snapshots and what changed in a watched file |
 | `guard-rules.py` | keeps a watched file from drifting away from its record |
-| `morf.py` | where the MORF folder is; imported by the rest |
+| `morf.py` | the `.morf` this script lives in; imported by the rest |
 | `config.json` | weights, scale unit, level step, the rule thresholds |
 
 ## What to know before starting

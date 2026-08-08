@@ -2,11 +2,11 @@ Take me back to the conversation a line came from.
 
 The argument is a fragment of an observation, an article or a rule.
 
-1. Find it across `MORF/Memory/`, including `dropped.md`, in fact
-   articles, in `MORF/Rules/map.md` and in `MORF/Rules/**/*.log.md`.
+1. Find it across `.morf/`, including `dropped.md`, in fact
+   articles, in `.morf/Rules/map.md` and in `.morf/Rules/**/*.log.md`.
    Say where it lives.
 2. For each source, run:
-   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/read-session.py <ref> <keyword>`
+   `python3 "$CLAUDE_PROJECT_DIR/.morf/scripts/read-session.py" <ref> <keyword>`
    A reference may carry a line range: `260803-a41f#412-980`.
 3. Show the fragments in chronological order, with date and project from
    `sessions.md`. Do not skip the agents' reasoning — the answer is usually there.

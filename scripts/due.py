@@ -23,8 +23,7 @@ s:… -->` line, and a session named there is one it has seen. Inferring the
 decision from the file's timestamp instead was worse than nothing; the
 reasoning is in `Docs/foundation.md`.
 
-    python3 due.py            what the current folder's project owes
-    python3 due.py --all      every project
+    python3 due.py            what this `.morf`'s memory owes
     python3 due.py --prompt   the same, addressed to the agent, on every turn
     python3 due.py --stop     refuses to let a turn end while a debt stands
 
@@ -40,14 +39,14 @@ import morf
 
 # ===== Settings =====
 
-MEMORY = morf.memory()
-SESSIONS = MEMORY / "sessions.md"
-AUDIT = MEMORY / "audit.md"
+OBSERVATIONS = morf.observations()
+DROPPED = morf.home() / "dropped.md"
+SESSIONS = morf.home() / "sessions.md"
+AUDIT = morf.home() / "audit.md"
 FACTS = morf.facts()
-INDEX = MEMORY / "INDEX.md"
+INDEX = morf.home() / "INDEX.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 AUDIT_AFTER = 10                      # sessions, per the skill
-NOT_PROJECTS = ("Transcripts", "Scripts", ".state")
 
 SOURCE_RE = re.compile(r"s:(\d{6}-\w+)")
 STRETCH_RE = re.compile(r"s:(\d{6}-\w+)#(\d+)-(\d+)")
@@ -69,37 +68,25 @@ def config(key: str, fallback):
 
 # ===== Reading what is on disk =====
 
-def rows() -> list[tuple[str, str]]:
-    """(id, project) in the order the index recorded them."""
+def order() -> list[str]:
+    """Every session id in the index, oldest first.
+
+    One `.morf` is one project, so there is no column to filter on: every row
+    is this repo's, and the whole index is the time scale.
+    """
     try:
         lines = SESSIONS.read_text(encoding="utf-8").splitlines()
     except OSError:
         return []
-    found = []
-    for line in lines:
-        match = ROW_RE.match(line)
-        if match:
-            found.append((match.group("id"), match.group("project")))
-    return found
+    return [match.group("id") for line in lines
+            if (match := ROW_RE.match(line))]
 
 
-def order(project: str) -> list[str]:
-    """This project's session ids, oldest first."""
-    return [name for name, owner in rows() if owner == project]
-
-
-def after(project: str, marker: str) -> int:
-    """This project's sessions recorded after the marker, wherever it stood.
-
-    The audit keeps one marker for the whole vault, so it names a session of
-    whichever project was audited. Looking for it inside one project's list
-    finds nothing and reports every session as unaudited.
-    """
-    seen = rows()
-    at = next((n for n, (name, _) in enumerate(seen) if name == marker), None)
-    if at is None:
-        return sum(1 for _, owner in seen if owner == project)
-    return sum(1 for _, owner in seen[at + 1:] if owner == project)
+def after(marker: str) -> int:
+    """Sessions recorded after the marker; all of them if it is not found."""
+    ids = order()
+    at = next((n for n, name in enumerate(ids) if name == marker), None)
+    return len(ids) - (at + 1) if at is not None else len(ids)
 
 
 def sources(path: Path, weighed: bool = True) -> set[str]:
@@ -119,41 +106,42 @@ def sources(path: Path, weighed: bool = True) -> set[str]:
     return set(SOURCE_RE.findall(text if weighed else CONSIDERED_RE.sub("", text)))
 
 
-def elapsed(project: str, since: set[str]) -> int:
-    """Sessions of this project after the newest of `since`; all of them if none."""
-    ids = order(project)
+def elapsed(since: set[str]) -> int:
+    """Sessions recorded after the newest of `since`; all of them if none."""
+    ids = order()
     positions = [i for i, name in enumerate(ids) if name in since]
     return len(ids) - (max(positions) + 1) if positions else len(ids)
 
 
 # ===== The obligations =====
 
-def consolidation(project: str) -> list[str]:
+def consolidation() -> list[str]:
     """Levels holding material the level above has never seen, and long enough."""
     levels = config("levels", ["L0", "L1", "L2", "L3"])
     horizons, owed = config("horizon_base", 1), []
     step = config("horizon_step", 5)
     for i in range(len(levels) - 1):
-        lower, upper = MEMORY / project / f"{levels[i]}.md", MEMORY / project / f"{levels[i + 1]}.md"
+        lower = OBSERVATIONS / f"{levels[i]}.md"
+        upper = OBSERVATIONS / f"{levels[i + 1]}.md"
         unseen = sources(lower, weighed=False) - sources(upper)
         if not unseen:
             continue
         # The cadence of the level being filled: levels.md gives L1 after 1
         # session, L2 after 5, L3 after 25 — that is base * step ** i.
         after = horizons * step ** i
-        waited = elapsed(project, sources(upper))
+        waited = elapsed(sources(upper))
         if waited >= after:
             owed.append(f"{levels[i]} → {levels[i + 1]}: {len(unseen)} session(s) never lifted, "
                         f"{waited} session(s) waited against {after}")
     return owed
 
 
-def audit(project: str) -> str:
+def audit() -> str:
     """The skill sets the timer at ten sessions and says not to ask about it."""
     text = AUDIT.read_text(encoding="utf-8") if AUDIT.is_file() else ""
     match = LAST_RE.search(text)
     last = match.group(1).removeprefix("s:") if match else "none"
-    waited = len(order(project)) if last in ("", "none") else after(project, last)
+    waited = len(order()) if last in ("", "none") else after(last)
     return f"audit: {waited} session(s) since {last}, due at {AUDIT_AFTER}" if waited >= AUDIT_AFTER else ""
 
 
@@ -168,10 +156,11 @@ def stale_map() -> str:
     return f"facts: {len(articles)} article(s) newer than the map — run build-index.py"
 
 
-def is_project(project: str) -> bool:
-    """A folder with shelves. The session index also names throwaway cwds."""
+def initialized() -> bool:
+    """Whether this `.morf` has a memory yet: the inbox exists once a session
+    has prepared it. A `.morf` never touched owes nothing."""
     levels = config("levels", ["L0", "L1", "L2", "L3"])
-    return bool(project) and project != "—" and (MEMORY / project / f"{levels[0]}.md").is_file()
+    return (OBSERVATIONS / f"{levels[0]}.md").is_file()
 
 
 def pending(cwd: str) -> list[str]:
@@ -206,22 +195,20 @@ def read_up_to() -> dict[str, int]:
     bookkeeping, and bookkeeping is what went wrong. Whatever the marker says,
     lines already accounted for are not owed again.
 
-    Every project is read, not the one being asked about: a session run in a
-    worktree is a project of its own by folder name, while the observations it
-    produced are written onto the shelves of the project it was work on.
+    There is one memory to read: the levels in `Observations/` and `dropped.md`
+    at the root. A worktree's own observations land here too, because it shares
+    this `.morf` with the checkout it is work on.
     """
     highest: dict[str, int] = {}
-    stems = config("levels", ["L0", "L1", "L2", "L3"]) + ["dropped"]
-    for folder in sorted(MEMORY.iterdir()) if MEMORY.is_dir() else []:
-        if not folder.is_dir() or folder.name in NOT_PROJECTS:
+    files = [OBSERVATIONS / f"{level}.md"
+             for level in config("levels", ["L0", "L1", "L2", "L3"])] + [DROPPED]
+    for path in files:
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
             continue
-        for stem in stems:
-            try:
-                text = (folder / f"{stem}.md").read_text(encoding="utf-8")
-            except OSError:
-                continue
-            for slug, _, end in STRETCH_RE.findall(CONSIDERED_RE.sub("", text)):
-                highest[slug] = max(highest.get(slug, 0), int(end))
+        for slug, _, end in STRETCH_RE.findall(CONSIDERED_RE.sub("", text)):
+            highest[slug] = max(highest.get(slug, 0), int(end))
     return highest
 
 
@@ -245,7 +232,7 @@ def stretch(cwd: str) -> list[str]:
             for left in (unread(ref, covered) for ref in refs) if left]
 
 
-def rules_owed(project: str, cwd: str) -> list[str]:
+def rules_owed(cwd: str) -> list[str]:
     """What the rule layer owes, imported here rather than at module level.
 
     This module hangs on `UserPromptSubmit` and on `Stop`; an unhandled
@@ -255,18 +242,18 @@ def rules_owed(project: str, cwd: str) -> list[str]:
     """
     try:
         import rules
-        return rules.owed(project, cwd)
+        return rules.owed(morf.project(), cwd)
     except Exception:                      # noqa: BLE001 — see above
         return ["rules: bookkeeping unreadable"]
 
 
-def owed(project: str, cwd: str = "") -> list[str]:
-    """Everything this project owes. Nothing here waits on the owner."""
-    if not is_project(project):
+def owed(cwd: str = "") -> list[str]:
+    """Everything this `.morf`'s memory owes. Nothing here waits on the owner."""
+    if not initialized():
         return []
-    return [line for line in (*stretch(cwd), audit(project), stale_map(),
-                              *consolidation(project),
-                              *rules_owed(project, cwd)) if line]
+    return [line for line in (*stretch(cwd), audit(), stale_map(),
+                              *consolidation(),
+                              *rules_owed(cwd)) if line]
 
 
 # ===== Entry =====
@@ -284,7 +271,7 @@ def as_instruction() -> None:
     except (json.JSONDecodeError, ValueError):
         return
     cwd = event.get("cwd") or str(Path.cwd())
-    debts = owed(morf.project(cwd), cwd)
+    debts = owed(cwd)
     if not debts:
         return
     print("MORF: this project owes work on its memory, and it is yours to do, "
@@ -313,7 +300,7 @@ def as_refusal() -> None:
     if event.get("stop_hook_active"):
         return
     cwd = event.get("cwd") or str(Path.cwd())
-    debts = owed(morf.project(cwd), cwd)
+    debts = owed(cwd)
     if not debts:
         return
     print("MORF: this turn cannot end while the memory is owed work. Load the morf "
@@ -328,12 +315,9 @@ def main() -> None:
         return as_refusal()
     if "--prompt" in sys.argv:
         return as_instruction()
-    projects = ([p.name for p in sorted(MEMORY.iterdir())
-                 if p.is_dir() and p.name not in NOT_PROJECTS]
-                if "--all" in sys.argv else [Path.cwd().name])
-    for project in projects:
-        for line in owed(project):
-            print(f"{project}: {line}")
+    # One `.morf` is one memory; there is no longer a set of projects to sweep.
+    for line in owed(str(Path.cwd())):
+        print(line)
 
 
 if __name__ == "__main__":

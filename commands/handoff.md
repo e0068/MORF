@@ -1,18 +1,11 @@
 Reconcile what happened with what the system predicted.
 
-1. Run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/archive-session.py --handoff`.
+1. Run `python3 "$CLAUDE_PROJECT_DIR/.morf/scripts/archive-session.py" --handoff`.
    It copies the transcript into the archive and prints a reference to the
    stretch written since the previous call: `s:260803-a41f#412-980`.
    Use that reference as the source for every line you write below.
    If the session start reported an unfinished stretch, use its reference
    instead — the copy for it is already archived.
-
-   Then record which project this session feeds:
-   `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/archive-session.py --project <name>`.
-   The folder you run in is a slot, not the project — a worktree feeds the
-   project it is work on, not one named after the task. This is the shelf you
-   write the lines below onto; naming it here is what makes the debt, the
-   scale and the notice find the same project you did.
 
 2. Expected outcomes are counters on existing lines; add no new lines for them:
    `hit` the prediction held · `use` the line changed what you did ·
@@ -27,11 +20,11 @@ Reconcile what happened with what the system predicted.
    `inverse` also creates a new line: the opposite is itself unexpected.
    A refutation matters more than a new finding — never skip it for brevity.
    If a rule received a `miss` or an `inverse`, it leaves the rule layer in
-   this same session: its counters go up in `MORF/Rules/map.md`, the move is
+   this same session: its counters go up in `.morf/Rules/map.md`, the move is
    written into that file's `*.log.md` as `returned:`, and the line goes back
    to `L0` with its counters, sources and move history. Tell me at once.
 
-3. Unexpected outcomes become a new line in `MORF/Memory/<project>/L0.md`:
+3. Unexpected outcomes become a new line in `.morf/Observations/L0.md`:
    `- hit:1 use:0 <what happened> (s:<ref>)`
    Write it in the indicative, in the language set in CLAUDE.md.
    An observation is what occurred.
@@ -53,10 +46,8 @@ Reconcile what happened with what the system predicted.
    wording, same counters, same sources. A new line would be a forgery, and
    `/morf:why` has to lead back to the same conversations.
 
-6. Fill the `about` column of this session's row in `MORF/Memory/sessions.md`:
+6. Fill the `about` column of this session's row in `.morf/sessions.md`:
    two or three words on what the work was about. The hook writes the row
    before the work starts and cannot know that.
 
 7. Invent nothing. If it did not happen in this session, it is not written.
-
-Show me what you intend to write before writing it.

@@ -21,8 +21,8 @@ import morf
 
 # ===== Settings =====
 
-MEMORY = morf.memory()
-SESSIONS = MEMORY / "sessions.md"
+OBSERVATIONS = morf.observations()
+SESSIONS = morf.home() / "sessions.md"
 CONFIG_FILE = Path(__file__).with_name("config.json")
 
 # Defaults. The working values live in config.json next to the script:
@@ -75,7 +75,7 @@ def load_config() -> dict:
 
 
 CONFIG = load_config()
-LEVELS_FILE = MEMORY / "levels.md"
+LEVELS_FILE = morf.home() / "levels.md"
 
 
 def horizons() -> list[int]:
@@ -106,14 +106,19 @@ def publish_levels() -> None:
 
 # ===== Opportunities to apply =====
 
-def exposure_scale(project: str) -> dict[str, int]:
-    """Sessions of the project in order: id to index. This is the time scale."""
+def exposure_scale() -> dict[str, int]:
+    """Every session in order: id to index. This is the time scale.
+
+    One `.morf` is one project, so every row in the index is this repo's — the
+    whole index is the scale, and nothing filters on the (informational)
+    project column.
+    """
     if not SESSIONS.exists():
         return {}
     scale, position = {}, 0
     for line in SESSIONS.read_text(encoding="utf-8").splitlines():
         row = ROW_RE.match(line)
-        if row and row.group("project") == project:
+        if row:
             scale[row.group("id")] = position
             position += 1
     return scale
@@ -196,7 +201,7 @@ def process(path: Path) -> int:
     """
     if path.stem not in CONFIG["levels"][1:]:   # the first level is the inbox, it is not scored
         return 0
-    scale = exposure_scale(path.parent.name)
+    scale = exposure_scale()
     lines = path.read_text(encoding="utf-8").splitlines()
     rewritten = [rewrite_line(line, scale) for line in lines]
     changed = sum(1 for a, b in zip(lines, rewritten) if a != b)
@@ -209,7 +214,8 @@ def process(path: Path) -> int:
 
 def main() -> None:
     publish_levels()
-    total = sum(process(path) for path in sorted(MEMORY.rglob("*.md")))
+    files = sorted(OBSERVATIONS.glob("*.md")) if OBSERVATIONS.is_dir() else []
+    total = sum(process(path) for path in files)
     print(f"Lines rescored: {total}. Horizons: {', '.join(map(str, horizons()))}.")
 
 

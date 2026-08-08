@@ -94,15 +94,17 @@ class Vault(unittest.TestCase):
 
     def state(self) -> dict:
         key = str(self.work).strip("/").replace("/", "-")
-        return json.loads((self.vault / "Memory" / ".state" / f"{key}.json")
+        return json.loads((self.vault / ".state" / f"{key}.json")
                           .read_text(encoding="utf-8"))
 
     def mark_of(self, session: str) -> int:
         return self.state()["sessions"][self.slug(session)]["mark"]
 
-    def observe(self, ref: str, project: str = "sample") -> None:
-        """Writes the stretch up as an observation, citing it as its source."""
-        inbox = self.vault / "Memory" / project / "L0.md"
+    def observe(self, ref: str) -> None:
+        """Writes the stretch up as an observation into the one memory, citing
+        it as its source. There is no project shelf to choose: one `.morf` is
+        one memory, and every worktree feeds this same inbox."""
+        inbox = self.vault / "Observations" / "L0.md"
         inbox.parent.mkdir(parents=True, exist_ok=True)
         with inbox.open("a", encoding="utf-8") as handle:
             handle.write(f"- hit:1 use:0 something happened ({ref})\n")
@@ -271,7 +273,7 @@ class SessionsAreNotDays(Vault):
         yesterday = "260101-7777"
         self.write(session, 80)
         key = str(self.work).strip("/").replace("/", "-")
-        state = self.vault / "Memory" / ".state"
+        state = self.vault / ".state"
         state.mkdir(parents=True, exist_ok=True)
         (state / f"{key}.json").write_text(json.dumps({"sessions": {yesterday: {
             "transcript": str(self.transcript(session)), "mark": 55}}}), encoding="utf-8")
@@ -318,7 +320,7 @@ class WorkOnceDoneIsNotDoneAgain(Vault):
         self.end(first)
         self.start(second)
 
-        archived = self.vault / "Memory" / "Transcripts" / self.slug(first) / f"{first}.jsonl"
+        archived = self.vault / "Transcripts" / self.slug(first) / f"{first}.jsonl"
         archived.write_text("touched\n", encoding="utf-8")
         self.start(second)
         self.assertEqual(archived.read_text(encoding="utf-8"), "touched\n",
@@ -358,15 +360,16 @@ class MemoryIsTheEvidence(Vault):
         self.observe(f"s:{self.slug(first)}#1-40")
         self.assertIn(f"s:{self.slug(first)}#41-90", self.debts())
 
-    def test_a_stretch_written_up_under_another_project_counts(self) -> None:
-        """A worktree is a project by folder name; its observations are not."""
+    def test_a_worktrees_stretch_clears_in_the_one_memory(self) -> None:
+        """A worktree shares this `.morf`; its stretch is written up here, and
+        that one memory is where the debt is checked against."""
         first, second = ("ffff4444-0000-0000-0000-000000000000",
                          "99994444-0000-0000-0000-000000000000")
         self.write(first, 30)
         self.start(first)
         self.end(first)
         self.start(second)
-        self.observe(f"s:{self.slug(first)}#1-30", project="the-real-project")
+        self.observe(f"s:{self.slug(first)}#1-30")
         self.assertNotIn("archived and unread", self.debts())
 
     def test_a_marker_left_by_the_earlier_version_clears_the_same_way(self) -> None:
@@ -375,7 +378,7 @@ class MemoryIsTheEvidence(Vault):
         self.start(session)
         key = str(self.work).strip("/").replace("/", "-")
         ref = f"s:{self.slug(session)}#1-25"
-        (self.vault / "Memory" / ".state" / f"{key}.pending").write_text(ref, encoding="utf-8")
+        (self.vault / ".state" / f"{key}.pending").write_text(ref, encoding="utf-8")
         self.assertIn(ref, self.debts())
 
         self.observe(ref)
@@ -387,7 +390,7 @@ class StateWrittenBeforeTheIndex(Vault):
 
     def legacy(self, session: str, mark: int) -> None:
         key = str(self.work).strip("/").replace("/", "-")
-        state = self.vault / "Memory" / ".state"
+        state = self.vault / ".state"
         state.mkdir(parents=True, exist_ok=True)
         (state / f"{key}.json").write_text(json.dumps({
             "slug": self.slug(session), "transcript": str(self.transcript(session)),
@@ -440,7 +443,7 @@ class AVerdictIsTheRecord(Vault):
             session = f"{number:04d}abcd-0000-0000-0000-000000000000"
             self.write(session, 10)
             self.start(session)
-        folder = self.vault / "Memory" / "sample"
+        folder = self.vault / "Observations"
         folder.mkdir(parents=True, exist_ok=True)
         inbox, above = folder / "L0.md", folder / "L1.md"
         inbox.write_text(f"---\nname: sample-L0\n---\n\n- hit:1 use:0 seen below ({held})\n",
@@ -478,7 +481,7 @@ class AVerdictIsTheRecord(Vault):
         self.start("9999333a-0000-0000-0000-000000000000")
         self.assertIn("archived and unread", self.debts())
 
-        folder = self.vault / "Memory" / "sample"
+        folder = self.vault / "Observations"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "L1.md").write_text(
             f"---\nname: sample-L1\n---\n\n<!-- considered: s:{self.slug(session)}#1-30 -->\n",
@@ -509,6 +512,76 @@ class AVerdictIsTheRecord(Vault):
         self.run_script(SCRIPTS / "score-memory.py")     # nothing left to change
         self.assertEqual(above.stat().st_mtime_ns, settled,
                          "a file with nothing to write was written anyway")
+
+
+class HomeIsScriptRelative(unittest.TestCase):
+    """The memory is the `.morf` the script lives in — no pointer, no env.
+
+    Everything above runs on `MORF_HOME`, which the loose fallback still reads,
+    so those tests would stay green even if the script-relative resolution were
+    reverted. These build a real `.morf/scripts/` inside a git repo and run with
+    no `MORF_HOME` at all, so the home has nowhere to come from but `__file__` —
+    and the worktree case, from the shared git dir.
+    """
+
+    def setUp(self) -> None:
+        self.root = Path(tempfile.mkdtemp(prefix="morf-repo-")).resolve()
+        self.addCleanup(shutil.rmtree, self.root, ignore_errors=True)
+        self.repo = self.root / "repo"
+        self.scripts = self.repo / ".morf" / "scripts"
+        self.scripts.mkdir(parents=True)
+        for path in [*SCRIPTS.glob("*.py"), SCRIPTS / "config.json"]:
+            shutil.copy2(path, self.scripts / path.name)
+        # Only the code is committed, so a worktree checks out `.morf/scripts`
+        # but none of the data — exactly the case the redirect exists for.
+        self.git("init", "-q")
+        self.git("config", "user.email", "t@example.com")
+        self.git("config", "user.name", "morf-test")
+        (self.repo / ".gitignore").write_text(
+            ".morf/*\n!.morf/scripts/\n", encoding="utf-8")
+        self.git("add", "-f", ".gitignore", ".morf/scripts")
+        self.git("commit", "-qm", "morf")
+
+    def git(self, *args: str) -> None:
+        subprocess.run(["git", "-C", str(self.repo), *args],
+                       check=True, capture_output=True, text=True)
+
+    def home_in(self, script_dir: Path, cwd: Path) -> str:
+        """`morf.home()` as resolved by the copy of morf.py in `script_dir`."""
+        env = dict(os.environ, PYTHONPATH=str(script_dir))
+        env.pop("MORF_HOME", None)
+        done = subprocess.run(
+            [sys.executable, "-c", "import morf; print(morf.home())"],
+            cwd=str(cwd), env=env, capture_output=True, text=True, check=True)
+        return done.stdout.strip()
+
+    def test_home_is_the_scripts_own_morf(self) -> None:
+        self.assertEqual(self.home_in(self.scripts, self.repo),
+                         str(self.repo / ".morf"))
+
+    def test_an_observation_lands_in_the_repos_morf(self) -> None:
+        session = "abcd0000-0000-0000-0000-000000000000"
+        env = dict(os.environ, HOME=str(self.root))
+        env.pop("MORF_HOME", None)
+        # A SessionStart prepares the levels; with no MORF_HOME they can only be
+        # inside the repo's own `.morf`.
+        subprocess.run(
+            [sys.executable, str(self.scripts / "archive-session.py")],
+            input=json.dumps({"session_id": session, "cwd": str(self.repo),
+                              "transcript_path": ""}),
+            text=True, capture_output=True, env=env, cwd=str(self.repo), check=True)
+        self.assertTrue((self.repo / ".morf" / "Observations" / "L0.md").is_file(),
+                        "the inbox was not created inside the repo's .morf")
+
+    def test_a_worktree_resolves_to_the_main_morf(self) -> None:
+        worktree = self.root / "wt"
+        self.git("worktree", "add", "-q", str(worktree), "HEAD")
+        self.assertTrue((worktree / ".morf" / "scripts" / "morf.py").is_file(),
+                        "the worktree did not check out the code")
+        self.assertEqual(
+            self.home_in(worktree / ".morf" / "scripts", worktree),
+            str(self.repo / ".morf"),
+            "a worktree did not resolve back to the main checkout's .morf")
 
 
 if __name__ == "__main__":

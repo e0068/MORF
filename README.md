@@ -18,20 +18,32 @@ markdown files: any editor will do, and Obsidian is convenient for the canvas.
 
 ## Install
 
-Download `Install-MORF.command` from the release and double-click it. It asks where
-the `MORF` folder goes, what the first project is called and which language to
-keep observations and fact articles in — a list, opened on the one your system
-already uses. Then it drops the plugin into `~/.claude/skills/` and lays the
-files out. No terminal, no permission prompts.
-
-On first launch macOS warns about an unsigned file: right-click → Open → Open.
-
-Through the marketplace, if you prefer:
+MORF is dropped into a repository, not installed centrally. Run the installer
+inside the repo you want it in:
 
 ```
-/plugin marketplace add e0068/MORF
-/plugin install morf@morf
+tools/install.sh                 into the git top-level of the current directory
+tools/install.sh <target-repo>   into that repository
 ```
+
+It lays down `<repo>/.morf/` — the scripts, hooks and docs, plus an empty
+memory skeleton where one is missing — wires the hooks into the repo's own
+`.claude/settings.json` (merging, never clobbering existing settings),
+registers the commands under `.claude/commands/morf/` and the skill under
+`.claude/skills/morf/`, and writes the content-language block into the repo's
+`CLAUDE.md`. Memory records are never touched, and re-running is idempotent.
+`--lang <Name>` sets the content language non-interactively; `--private` lets
+the whole `.morf` — data and all — travel with the repo.
+
+No clone required: `tools/build-release.py` builds a self-extracting
+`dist/install-morf.sh` that carries the payload and runs the same installer:
+
+```
+sh install-morf.sh [--lang <Name>] [--private] [target]
+```
+
+If you had MORF as a marketplace plugin (`morf@morf`), remove it through
+`/plugin` — MORF is no longer a plugin.
 
 ## What is inside
 
@@ -47,8 +59,8 @@ Through the marketplace, if you prefer:
 | `/morf:audit` | the balancer — a threshold review every tenth session that keeps the flow present and varied |
 | skill `morf` | what to read at session start, how to consolidate, where things go |
 
-The model is on the canvas at `MORF/Memory/model.canvas`, the reasoning is
-in [`MORF/Docs/`](docs/readme.md).
+The model is on the canvas at `.morf/model.canvas`, the reasoning is
+in [`.morf/docs/`](docs/readme.md).
 
 ## Three categories
 
