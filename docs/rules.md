@@ -15,7 +15,7 @@ tags: [morf, rules]
 **What it consists of and where it lies.**
 
 1. The text — a list item in the imperative. That is all that lies in a file outside the MORF contour.
-2. The accounting — a line in the register `MORF/Rules/map.md`: the same counters a memory line carries, the `S` and `R` computed from them, and the source list — see "Accounting".
+2. The accounting — a line in the register `.morf/Rules/map.md`: the same counters a memory line carries, the `S` and `R` computed from them, and the source list — see "Accounting".
 3. The rule lies in one of the five files outside the contour, at an address from "Structure"; the file is its contour: in another project the rule is not hidden, it does not exist.
 4. On that file MORF keeps a snapshot `*.snap.md` and a log `*.log.md` — see "Structure" and "Watching".
 
@@ -88,7 +88,7 @@ The line is not created anew when it moves: counters, sources and move history s
 **How it works.** All five addresses lie outside MORF, so for every watched file MORF keeps a pair: a snapshot `*.snap.md` — the file as it stood when its rules were last accounted for — and a log `*.log.md`, written by hand, saying what became of them.
 
 ```
-MORF/Rules/
+.morf/Rules/
 ├── map.md                      the register: a line per rule, counters and sources
 ├── home/                       everything under `~/.claude`
 │   ├── CLAUDE.snap.md · CLAUDE.log.md
@@ -112,8 +112,8 @@ An older rule can still be brought in, but only on your own word: nothing will e
 **How to start accounting for something that was not tracked.** Tell the agent which line in which file, and the rest is its work:
 
 ```bash
-python3 MORF/Memory/Scripts/rules.py --track  <file>          # if the file is not watched yet
-python3 MORF/Memory/Scripts/rules.py --adopt  <file> "<the rule text>"
+python3 .morf/scripts/rules.py --track  <file>          # if the file is not watched yet
+python3 .morf/scripts/rules.py --adopt  <file> "<the rule text>"
 ```
 
 The text must match an item in the file exactly, or the command refuses: it does not edit a file it does not own, it starts accounting for what already stands there. After it the register holds a line with zero counters, the log holds an `added:` entry, and from that moment the rule is watched — losing it or rewording it becomes drift.
@@ -132,7 +132,7 @@ Every snapshot carries the `.snap` suffix, though it exposes only one case: `Rul
 
 #### Counters
 
-**How it works.** The accounting lies in MORF, not in a file outside the contour: the register `MORF/Rules/map.md`, a line per rule, in the shape of a memory line. The counters are the same, and the same `score-memory.py` computes them.
+**How it works.** The accounting lies in MORF, not in a file outside the contour: the register `.morf/Rules/map.md`, a line per rule, in the shape of a memory line. The counters are the same, and the same `score-memory.py` computes them.
 
 ```markdown
 ## ~/.claude/CLAUDE.md — home, always

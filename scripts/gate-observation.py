@@ -86,6 +86,27 @@ def ledger_staged(cwd: str) -> bool:
         return True
 
 
+def commit_dir(command: str, cwd: str) -> str:
+    """Where the commit actually runs, which is not always where the session sits.
+
+    The gate read the session's `cwd` and took it for the commit's target — a
+    proxy that holds until the two differ. Committing a main checkout from a
+    session living in one of its worktrees, the ledger was staged in the
+    checkout while the gate looked at the worktree and found nothing staged: an
+    honest entry could not clear the gate at all. So read the destination out of
+    the command that is about to run — `git -C <dir>`, or a `cd <dir>` ahead of
+    it — and fall back to the session only when the command names nowhere else.
+    """
+    at = re.search(r"git\b(?:\s+-c\s+\S+|\s+--?[\w-]+(?:=\S+)?)*\s+-C\s+"
+                   r"('[^']*'|\"[^\"]*\"|\S+)", command)
+    lead = re.match(r"\s*cd\s+('[^']*'|\"[^\"]*\"|\S+)\s*&&", command)
+    named = at or lead
+    if not named:
+        return cwd
+    path = os.path.expanduser(named.group(1).strip("'\""))
+    return path if os.path.isabs(path) else os.path.join(cwd, path)
+
+
 def main() -> None:
     if "--record" in sys.argv:
         rest = sys.argv[sys.argv.index("--record") + 1:]
@@ -98,9 +119,10 @@ def main() -> None:
         return
     if event.get("tool_name") != "Bash":
         return
-    if not COMMIT.search((event.get("tool_input") or {}).get("command", "")):
+    command = (event.get("tool_input") or {}).get("command", "")
+    if not COMMIT.search(command):
         return
-    cwd = event.get("cwd") or os.getcwd()
+    cwd = commit_dir(command, event.get("cwd") or os.getcwd())
 
     try:
         if both_satisfied(cwd):

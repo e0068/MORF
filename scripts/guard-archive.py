@@ -24,11 +24,12 @@ import sys
 
 # ===== Settings =====
 
-# The tail of the path, not the whole of it: the folder above is wherever its
-# owner put it and may be called anything, while these two segments are ours.
-# Spelled out rather than imported, because this hook runs on every tool call
-# and a guard that fails open on a broken sibling import guards nothing.
-GUARDED = "Memory/Transcripts"
+# The tail of the path, not the whole of it: the repository above is wherever
+# its owner put it and may be called anything, while these two segments — the
+# `.morf` folder and its archive — are ours. Spelled out rather than imported,
+# because this hook runs on every tool call and a guard that fails open on a
+# broken sibling import guards nothing.
+GUARDED = ".morf/Transcripts"
 WRITERS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 TARGETS = ("file_path", "notebook_path", "path")
 SHELL = ("Bash", "BashOutput")

@@ -1,22 +1,61 @@
 #!/usr/bin/env python3
 """Where MORF is.
 
-The plugin is installed once and runs in any project, so the path cannot be
-hardcoded. It comes from an environment variable, or from the pointer the
-installer writes. The folder is the memory itself, not a container for it:
-nothing above it is ours, and no script looks there.
+MORF is a `.morf/` folder dropped inside a repository: the scripts and the
+memory they tend live together, so there is nothing to install and nothing to
+point at. The running script sits in `.morf/scripts/`, so the home is simply
+its own `.morf` — its parent's parent — and the fragile central-install
+resolver it replaced is gone.
+
+Two escapes remain, for a script not run from inside a `.morf`. A git worktree
+checks out the code but shares one `.morf` with the main checkout; its memory
+is that one, found through the common git dir. And for loose, non-git use the
+old order survives as a last resort: the environment variable, the pointer
+file, then `~/MORF`.
 """
 
-import json
 import os
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 
 POINTER = Path.home() / ".claude" / "morf-path"
 
 
+def _main_checkout_morf(script_home: Path) -> Path | None:
+    """The main checkout's `.morf`, when the script runs from a worktree's.
+
+    A worktree is one repository with the main checkout, so `git-common-dir`
+    names the shared `.git`; its parent is the main working tree, and the
+    `.morf` beside it is the single memory every worktree feeds. Run from the
+    main checkout it resolves back to `script_home` itself, so the call is
+    idempotent and needs no "am I a worktree" test. `None` when there is no
+    git, or no `.morf` there — the caller then keeps its own.
+    """
+    try:
+        common = subprocess.run(
+            ["git", "-C", str(script_home), "rev-parse", "--git-common-dir"],
+            capture_output=True, text=True, timeout=5, check=True).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if not common:
+        return None
+    git_dir = Path(common) if Path(common).is_absolute() else script_home / common
+    candidate = git_dir.resolve().parent / ".morf"
+    return candidate if candidate.is_dir() else None
+
+
+@lru_cache(maxsize=None)
 def home() -> Path:
-    """The MORF folder. Order: environment variable, pointer file, home."""
+    """The `.morf` folder this script lives in — code and data together.
+
+    Cached: it is read into a dozen module-level constants and depends only on
+    the script's own location and the environment, both fixed for the run, so
+    the one git call the worktree case makes happens at most once.
+    """
+    script_home = Path(__file__).resolve().parent.parent
+    if script_home.name == ".morf":
+        return _main_checkout_morf(script_home) or script_home
     env = os.environ.get("MORF_HOME")
     if env:
         return Path(env).expanduser()
@@ -25,8 +64,9 @@ def home() -> Path:
     return Path.home() / "MORF"
 
 
-def memory() -> Path:
-    return home() / "Memory"
+def observations() -> Path:
+    """The observation layer: L0..L3 live here, dropped.md sits at the root."""
+    return home() / "Observations"
 
 
 def facts() -> Path:
@@ -34,7 +74,7 @@ def facts() -> Path:
 
 
 def state() -> Path:
-    return memory() / ".state"
+    return home() / ".state"
 
 
 def slot(cwd: str) -> str:
@@ -44,34 +84,14 @@ def slot(cwd: str) -> str:
     return str(path).strip("/").replace("/", "-") or "root"
 
 
-def project(cwd: str) -> str:
-    """The project a session feeds — its shelves, its scale, its debt.
+def project() -> str:
+    """The one project this `.morf` serves: the repository it lives in.
 
-    A working folder is a slot, not an identity: a worktree is named after the
-    task, not the project it is work on, so its own name shelves nothing.
-    Resolved by the relation, not the folder name that stands in for it — the
-    order is the judgement the agent recorded at handoff, then a git seed (a
-    checkout, and every worktree of it, is named by its main checkout), then
-    the folder name for anything ungit. A dash for the vault itself and for
-    the home directory: neither is a project.
+    Memory is no longer sharded by project — one `.morf` is one repo is one
+    memory — so nothing composes a `<project>` path segment any more. This name
+    only labels the `sessions.md` column and reads back in `/why`; every row is
+    the same repo. The old resolver (recorded judgement, git seed, folder-name
+    fallback) is gone with the segment it fed: the repo is the checkout that
+    holds the `.morf`, so its name is the home's parent's.
     """
-    path = Path(cwd).expanduser() if cwd else Path.cwd()
-    if path in (home(), Path.home()):
-        return "—"
-    try:
-        recorded = json.loads((state() / f"{slot(cwd)}.json")
-                              .read_text(encoding="utf-8")).get("project")
-        if isinstance(recorded, str) and recorded:
-            return recorded
-    except (OSError, ValueError, AttributeError):
-        pass
-    try:
-        common = subprocess.run(
-            ["git", "-C", str(path), "rev-parse", "--git-common-dir"],
-            capture_output=True, text=True, timeout=5, check=True).stdout.strip()
-        if common:
-            git_dir = Path(common) if Path(common).is_absolute() else path / common
-            return git_dir.resolve().parent.name
-    except (OSError, subprocess.SubprocessError):
-        pass
-    return path.name or "—"
+    return home().parent.name or "—"

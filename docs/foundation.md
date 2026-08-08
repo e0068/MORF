@@ -18,7 +18,7 @@ tags: [morf, infrastructure]
 
 **How it works.** Two hooks, no agent involvement, described in the [hooks reference](https://code.claude.com/docs/en/hooks): [`SessionStart`](https://code.claude.com/docs/en/hooks#sessionstart) and [`SessionEnd`](https://code.claude.com/docs/en/hooks#sessionend).
 
-`SessionStart` adds a row to `MORF/Memory/sessions.md` and registers the session. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
+`SessionStart` adds a row to `.morf/sessions.md` and registers the session. Registration happens at the start rather than the end: otherwise `/morf:handoff` would have nothing to reference — the row would not exist yet.
 
 A copy into the archive is made on every `/morf:handoff`: the session transcript, and the subagent files kept in the folder Claude Code names after the session.
 
@@ -42,7 +42,7 @@ A copy is not enough, though: a session that ends without `/morf:handoff` leaves
 
 Ended, not merely other. `SessionEnd` says so outright, but the case worth sweeping — window closed, process killed, machine shut down — is exactly the one that hook never sees, so a transcript left untouched for two hours counts as over too: Claude Code appends to it on every turn, and silence that long is not a session thinking.
 
-**The memory is the evidence, the marker is only bookkeeping.** A stretch written up names itself as its source, so a debt is dropped for whatever the memory already cites — across every project, since a session run in a worktree is a project of its own by folder name while its observations are written onto the shelves of the project it was work on. Bookkeeping is what went wrong here twice; what a line says about where it came from cannot be wrong in the same way.
+**The memory is the evidence, the marker is only bookkeeping.** A stretch written up names itself as its source, so a debt is dropped for whatever the memory already cites. There is one memory to read — the levels in `Observations/` and `dropped.md` — and a worktree's own observations land in it too, because a worktree shares the main checkout's `.morf` rather than keeping one named after the task. Bookkeeping is what went wrong here twice; what a line says about where it came from cannot be wrong in the same way.
 
 **Nothing but copying writes into the archive.** It is filled by exactly one path — from Claude Code's history, by a hook rather than a tool. So any tool call touching `Transcripts` is either a mistake or an attempt to erase evidence, and telling them apart is pointless: there are no legitimate cases.
 
@@ -90,7 +90,9 @@ The row is added by the hook; the "about" column is filled by `/morf:handoff`.
 
 An identifier `s:260803-a41f` is the date as YYMMDD plus the first four characters of the session uuid.
 
-**Why this way.** Two functions in one structure. The obvious one: turning an identifier into a path. The more important one: the order of a project's rows sets the age of events. Age is measured in sessions, and the data for it is already here — no separate journal needed.
+**Why this way.** Two functions in one structure. The obvious one: turning an identifier into a path. The more important one: the order of the rows sets the age of events. One `.morf` is one project, so every row is this repo's and the whole index is the time scale — there is no column to filter on. Age is measured in sessions, and the data for it is already here — no separate journal needed.
+
+The `project` column survives as a label, not a divider: it names the repository the `.morf` lives in, the same on every row, read back only in `/morf:why`.
 
 The date in the identifier is human-readable, the uuid distinguishes several sessions on the same day. It is the only calendar value in the whole model, and it takes no part in the arithmetic.
 
@@ -103,7 +105,7 @@ The date in the identifier is human-readable, the uuid distinguishes several ses
 **How it works.**
 
 ```bash
-python3 MORF/Memory/Scripts/read-session.py 260803-a41f#412-980 cache
+python3 .morf/scripts/read-session.py 260803-a41f#412-980 cache
 ```
 
 `/morf:why` walks the chain: line → its `s:` → the index → the archive → a readable stretch of conversation. Agents' reasoning is shown.
@@ -136,7 +138,7 @@ The comment is markup: a notes editor renders it away, so the bookkeeping stays 
 
 ## Settings
 
-**How it works.** `MORF/Memory/Scripts/config.json` holds numbers for the script, next to the script. The canvas shows that same file as a link node, so no copy of the values exists anywhere.
+**How it works.** `.morf/scripts/config.json` holds numbers for the script, next to the script. The canvas shows that same file as a link node, so no copy of the values exists anywhere.
 
 `levels.md` is generated from it: the levels with their horizons and limits, in a form the agent reads. Two files, but not two stores of one thing — a source and its derivative. Delete `levels.md` and it comes back; `config.json` cannot be restored from anywhere.
 

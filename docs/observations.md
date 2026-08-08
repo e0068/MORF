@@ -52,12 +52,13 @@ Mood stopped being a filter because an observation is indicative by nature: turn
 **How it works.**
 
 ```
-MORF/Memory/<project>/
-├── L0.md      intake, never loaded into context
-├── L1.md      held a second time, or changed a decision
-├── L2.md      changes behaviour in tasks that do not exist yet
-├── L3.md      lived out its horizon without refutation
-└── dropped.md displaced, no limit
+.morf/
+├── Observations/
+│   ├── L0.md   intake, never loaded into context
+│   ├── L1.md   held a second time, or changed a decision
+│   ├── L2.md   changes behaviour in tasks that do not exist yet
+│   └── L3.md   lived out its horizon without refutation
+└── dropped.md  displaced, no limit
 ```
 
 Promotion is possible only if the weakest line by `S` leaves the level. What is displaced moves to `dropped.md` whole.

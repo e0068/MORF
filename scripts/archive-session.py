@@ -32,10 +32,11 @@ import morf
 
 # ===== Settings =====
 
-MEMORY = morf.memory()
-TRANSCRIPTS = MEMORY / "Transcripts"
-SESSIONS = MEMORY / "sessions.md"
-STATE = MEMORY / ".state"
+OBSERVATIONS = morf.observations()
+DROPPED = morf.home() / "dropped.md"
+TRANSCRIPTS = morf.home() / "Transcripts"
+SESSIONS = morf.home() / "sessions.md"
+STATE = morf.state()
 CONFIG_FILE = Path(__file__).with_name("config.json")
 DEFAULT_LEVELS = ["L0", "L1", "L2", "L3"]
 HEADER = "| id | date | project | about |\n|---|---|---|---|\n"
@@ -78,20 +79,6 @@ def project_key(cwd: str) -> str:
 
 def current_of(cwd: str) -> Path:
     return STATE / f"{project_key(cwd)}.json"
-
-
-def record_project(name: str) -> None:
-    """Persist the agent's judgement of which project this session feeds.
-
-    `morf.project` reads this before anything else, so the shelves, the scale
-    and the debt follow the relation the agent named rather than the folder
-    name standing in for it. Written into the same slot state the index keeps,
-    and touching nothing else it holds.
-    """
-    cwd = os.getcwd()
-    state = load(cwd)
-    state["project"] = name
-    save(cwd, state)
 
 
 # ===== Actions =====
@@ -148,7 +135,7 @@ def levels() -> list[str]:
         return DEFAULT_LEVELS
 
 
-def crowding(project: str) -> str:
+def crowding() -> str:
     """Says whether the inbox is owed a consolidation, and how badly.
 
     The cadence is written in levels.md and nothing ever checked it, so the
@@ -157,9 +144,7 @@ def crowding(project: str) -> str:
     limit the loss becomes real — further lines displace earlier ones — so
     that is where the notice stops being a notice.
     """
-    if project in ("", "—"):
-        return ""
-    inbox = MEMORY / project / f"{levels()[0]}.md"
+    inbox = OBSERVATIONS / f"{levels()[0]}.md"
     try:
         held = sum(1 for line in inbox.read_text(encoding="utf-8").splitlines()
                    if line.startswith("- "))
@@ -169,9 +154,9 @@ def crowding(project: str) -> str:
         return ""
     limit = limits()[0]
     if held >= limit:
-        return (f"{project}: the inbox holds {held} lines against a limit of {limit}. "
+        return (f"the inbox holds {held} lines against a limit of {limit}. "
                 f"Further observations displace earlier ones. Consolidate before working.")
-    return (f"{project}: {held} of {limit} lines in the inbox, none consolidated. "
+    return (f"{held} of {limit} lines in the inbox, none consolidated. "
             f"The levels that are read stay empty until they are filled from it.")
 
 
@@ -183,19 +168,19 @@ def limits() -> list[int]:
         return [40, 30, 25, 20]
 
 
-def prepare(project: str) -> int:
-    """Creates the project's shelves the first time the project is seen.
+def prepare() -> int:
+    """Creates the memory's level files the first time the `.morf` is seen.
 
     Nothing created them before: /handoff wrote an observation into L0 while
     the levels above it — the ones that are read — did not exist, so the line
-    had nowhere to be promoted to and the gap showed only later. Existing
-    files are never touched, and MORF's own folder gets none.
+    had nowhere to be promoted to and the gap showed only later. The levels
+    live in `Observations/`, `dropped.md` at the root; existing files are never
+    touched.
     """
-    if project in ("", "—"):
-        return 0
+    project = morf.project()
     made = 0
-    for stem in levels() + ["dropped"]:
-        path = MEMORY / project / f"{stem}.md"
+    for stem, path in ([(level, OBSERVATIONS / f"{level}.md") for level in levels()]
+                       + [("dropped", DROPPED)]):
         if path.exists():
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -490,9 +475,9 @@ def mark_foreign_drift(slug: str, cwd: str) -> None:
 
 def main() -> None:
     if "--project" in sys.argv:
-        named = sys.argv[sys.argv.index("--project") + 1:]
-        if named:
-            record_project(named[0])
+        # Memory is single-project now — the repo names itself, so there is no
+        # judgement to record. Accepted as a no-op so the handoff command, which
+        # still calls it, does not fall through to a spurious SessionStart.
         return
     if "--handoff" in sys.argv:
         print(handoff())
@@ -509,13 +494,12 @@ def main() -> None:
 
     message = unfinished(slug, cwd)
     mark_foreign_drift(slug, cwd)          # before remember(): it overwrites the slug
-    project = morf.project(cwd)
-    append_row(slug, today, project)
-    prepare(project)
+    append_row(slug, today, morf.project())
+    prepare()
     remember(slug, event.get("transcript_path", ""), cwd)
     sweep()
 
-    for text in (message, crowding(project), *due.owed(project, cwd)):
+    for text in (message, crowding(), *due.owed(cwd)):
         if text:
             print(text)
 
